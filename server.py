@@ -86,6 +86,7 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP(
     "sympy-mcp",
     dependencies=["sympy", "pydantic", "einsteinpy"],
+    host="0.0.0.0",
     instructions="Provides access to the Sympy computer algebra system, which can perform symbolic manipulation of mathematical expressions.",
 )
 
