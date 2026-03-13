@@ -229,6 +229,24 @@ To set up with [5ire](https://github.com/nanbingxyz/5ire), open 5ire and go to T
 
 Replace `/ABSOLUTE_PATH_TO/server.py` with the actual path to your sympy-mcp server.py file.
 
+## HTTP Transport (Streamable HTTP / SSE)
+
+The server supports MCP over HTTP using the [streamable-http transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) introduced in MCP spec 2025-03-26. This replaces the legacy SSE transport and exposes a single `/mcp` endpoint that clients connect to over HTTP.
+
+This is the recommended transport when running the server as a standalone process or in a container, because it allows any HTTP-capable MCP client to connect without needing to launch the server as a subprocess.
+
+```bash
+# Run locally with HTTP transport
+uv run python server.py --transport streamable-http
+
+# Override host/port
+uv run python server.py --transport streamable-http --mcp-host 127.0.0.1 --mcp-port 9000
+```
+
+The legacy `--transport sse` flag is still supported for backward compatibility.
+
+A `/healthcheck` endpoint is also exposed that runs a full MCP protocol round-trip (initialize → tools/list → session teardown) and returns `{"status": "ok", "tool_count": N}`.
+
 ## Running in Container
 
 You can build and run the server using Docker locally:
@@ -239,6 +257,13 @@ docker build -t sympy-mcp .
 
 # Run the Docker container
 docker run -p 8081:8081 sympy-mcp
+```
+
+Or use Docker Compose from the `docker/` directory:
+
+```bash
+cd docker
+docker compose up -d --build
 ```
 
 Alternatively, you can pull the pre-built image from GitHub Container Registry:
