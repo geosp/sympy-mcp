@@ -6,16 +6,28 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
 dependencies = [
-    "mcp[cli]>=1.9.0",
-    "sympy>=1.14.0",
+    "mcp[cli]==1.26.0",
+    "sympy==1.14.0",
+    "fastapi==0.135.1",
+    "structlog==25.5.0",
+    "mcp-weather",
+    "requests==2.32.5",
+    "fastmcp==3.1.0",
+    "einsteinpy==0.4.0",
 ]
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+[project.scripts]
+sympy-mcp = "sympy_mcp.server:main"
 
-[tool.setuptools]
-py-modules = ["server", "vars"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv.sources]
+mcp-weather = { git = "https://github.com/geosp/mcp-weather.git" }
 
 [dependency-groups]
 dev = [

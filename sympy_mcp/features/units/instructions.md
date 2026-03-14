@@ -1,0 +1,62 @@
+# Units Tools
+
+Use the same `session_id` across all calls to share state. Physical quantity expressions must be introduced with `/expressions/introduce` before conversion. See `POST /session/reset` docs for the full session management guide.
+
+All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
+
+Pre-loaded units available in all sessions: `meter`, `second`, `kilogram`, `ampere`, `kelvin`, `mole`, `candela`, `kilometer`, `millimeter`, `gram`, `joule`, `newton`, `pascal`, `watt`, `coulomb`, `volt`, `ohm`, `farad`, `henry`, `speed_of_light`, `gravitational_constant`, `planck`, `day`, `year`, `minute`, `hour`.
+
+---
+
+## convert_to_units
+Converts a physical quantity expression to specified target units.
+
+**Parameters:**
+- `session_id` (str): Session identifier. Pass any string — sessions are auto-created on first use.
+- `expr_key` (str): Session key of the expression to convert (a `result_key` from a previous call). The expression should be a physical quantity (e.g., a value times a unit).
+- `target_units` (list of str): Unit name strings to convert to (e.g., `["meter", "second"]`).
+- `unit_system` (str, optional): Unit system — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
+
+**Returns:** `result` — the converted expression as a string (e.g. `"1000*meter"`); `result_key` — session key for chaining.
+
+**Notes:**
+- Unit names must match SymPy's `sympy.physics.units` names exactly (e.g., `"meter"` not `"m"`).
+- Multiple target units can be provided for compound unit conversions.
+
+**Example:**
+```json
+POST /units/convert
+{"session_id": "s1", "expr_key": "expr_0", "target_units": ["meter"]}
+→ {"success": true, "result": "1000*meter", "result_key": "expr_1"}
+```
+
+---
+
+## quantity_simplify_units
+Simplifies a physical quantity expression, combining and reducing units where possible.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the expression to simplify.
+- `unit_system` (str, optional): Unit system context — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
+
+**Returns:** `result` — the simplified expression as a string; `result_key` — session key for chaining.
+
+**Example:**
+```json
+POST /units/simplify
+{"session_id": "s1", "expr_key": "expr_0"}
+→ {"success": true, "result": "joule", "result_key": "expr_1"}
+```
+
+---
+
+## Available Unit Systems
+
+| Value | Description |
+|-------|-------------|
+| `SI` | International System of Units (default) |
+| `MKS` | Meter-Kilogram-Second |
+| `MKSA` | Meter-Kilogram-Second-Ampere |
+| `natural` | Natural units (c = hbar = 1) |
+| `cgs` | Centimeter-Gram-Second (CGS-Gauss) |
