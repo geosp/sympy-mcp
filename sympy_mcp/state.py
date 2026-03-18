@@ -347,6 +347,65 @@ class SymPyState:
         except Exception as e:
             return f"Error during substitution: {e}"
 
+    def factor_expression(self, expr_key: str) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        try:
+            result = sympy.factor(self.expressions[expr_key])
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error factoring expression: {e}"
+
+    def expand_expression(self, expr_key: str) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        try:
+            result = sympy.expand(self.expressions[expr_key])
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error expanding expression: {e}"
+
+    def collect_expression(self, expr_key: str, var_name: str) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        if var_name not in self.local_vars:
+            return f"Error: Symbol '{var_name}' not found. Introduce it first."
+        try:
+            result = sympy.collect(self.expressions[expr_key], self.local_vars[var_name])
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error collecting expression: {e}"
+
+    def apart_expression(self, expr_key: str, var_name: str) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        if var_name not in self.local_vars:
+            return f"Error: Symbol '{var_name}' not found. Introduce it first."
+        try:
+            result = sympy.apart(self.expressions[expr_key], self.local_vars[var_name])
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error computing partial fractions: {e}"
+
+    def evalf_expression(self, expr_key: str, n: int = 15) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        try:
+            result = self.expressions[expr_key].evalf(n)
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error evaluating expression numerically: {e}"
+
     # ------------------------------------------------------------------
     # Algebraic solving
     # ------------------------------------------------------------------

@@ -28,6 +28,34 @@ class SubstituteExpressionRequest(BaseModel):
     replacement_expr_key: str
 
 
+class FactorRequest(BaseModel):
+    session_id: str
+    expr_key: str
+
+
+class ExpandRequest(BaseModel):
+    session_id: str
+    expr_key: str
+
+
+class CollectRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    var_name: str
+
+
+class ApartRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    var_name: str
+
+
+class EvalfRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    n: int = 15
+
+
 class ExpressionResponse(BaseModel):
     success: bool
     result: Optional[str] = None

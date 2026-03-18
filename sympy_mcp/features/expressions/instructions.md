@@ -66,3 +66,101 @@ POST /expressions/substitute
 {"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "replacement_expr_key": "expr_1"}
 → {"success": true, "result": "4 + 2*y + y**2", "result_key": "expr_2"}
 ```
+
+---
+
+## factor_expression
+
+Factor an expression into irreducible components over the rationals.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the expression to factor.
+
+**Returns:** `result` — the factored expression (e.g. `"(x - 1)*(x + 1)"`); `result_key` — session key for the factored form.
+
+**Example:**
+```json
+POST /expressions/factor
+{"session_id": "s1", "expr_key": "expr_0"}
+→ {"success": true, "result": "(x - 1)*(x + 1)", "result_key": "expr_1"}
+```
+
+---
+
+## expand_expression
+
+Expand a product or power into a sum of terms.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the expression to expand.
+
+**Returns:** `result` — the expanded expression (e.g. `"x**2 + 2*x + 1"`); `result_key` — session key.
+
+**Example:**
+```json
+POST /expressions/expand
+{"session_id": "s1", "expr_key": "expr_0"}
+→ {"success": true, "result": "x**2 + 2*x + 1", "result_key": "expr_1"}
+```
+
+---
+
+## collect_expression
+
+Collect and group terms by powers of a variable.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the expression to collect.
+- `var_name` (str): Variable name to collect by.
+
+**Returns:** `result` — the collected expression (e.g. `"x*(y + z + x)"`); `result_key` — session key.
+
+**Example:**
+```json
+POST /expressions/collect
+{"session_id": "s1", "expr_key": "expr_0", "var_name": "x"}
+→ {"success": true, "result": "x**2 + x*(y + z)", "result_key": "expr_1"}
+```
+
+---
+
+## apart_expression
+
+Decompose a rational expression into partial fractions.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the rational expression.
+- `var_name` (str): Variable to decompose with respect to.
+
+**Returns:** `result` — partial fraction decomposition; `result_key` — session key.
+
+**Example:**
+```json
+POST /expressions/apart
+{"session_id": "s1", "expr_key": "expr_0", "var_name": "x"}
+→ {"success": true, "result": "1/(2*(x - 1)) - 1/(2*(x + 1))", "result_key": "expr_1"}
+```
+
+---
+
+## evalf_expression
+
+Numerically evaluate an expression to a specified number of significant digits.
+
+**Parameters:**
+- `session_id` (str): Session identifier.
+- `expr_key` (str): Session key of the expression to evaluate.
+- `n` (int, optional): Number of significant digits. Default: `15`.
+
+**Returns:** `result` — numerical value as a string (e.g. `"3.14159265358979"`); `result_key` — session key for the numerical result (can be chained further).
+
+**Example:**
+```json
+POST /expressions/evalf
+{"session_id": "s1", "expr_key": "expr_0", "n": 10}
+→ {"success": true, "result": "3.141592654", "result_key": "expr_1"}
+```
