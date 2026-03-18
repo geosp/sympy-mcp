@@ -40,3 +40,46 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         """Differentiate an expression with respect to a variable."""
         state = session_manager.get_or_create_sync(session_id)
         return state.differentiate_expression(expr_key, var_name, order)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def limit_expression(
+        session_id: str,
+        expr_key: str,
+        var_name: str,
+        point: str,
+        direction: str = "+",
+    ) -> str:
+        """Compute the limit of an expression as a variable approaches a point."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.limit_expression(expr_key, var_name, point, direction)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def series_expansion(
+        session_id: str,
+        expr_key: str,
+        var_name: str,
+        point: str = "0",
+        order: int = 6,
+    ) -> str:
+        """Compute the Taylor/Maclaurin series expansion of an expression."""
+        state = session_manager.get_or_create_sync(session_id)
+        raw = state.series_expansion(expr_key, var_name, point, order)
+        if raw.startswith("Error"):
+            return raw
+        key, display = raw.split("|||", 1)
+        return f"{display} [stored as {key}]"
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def summation_expression(
+        session_id: str,
+        expr_key: str,
+        var_name: str,
+        lower: str,
+        upper: str,
+    ) -> str:
+        """Compute a symbolic summation over a variable range."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.summation_expression(expr_key, var_name, lower, upper)

@@ -58,5 +58,16 @@ class SymPyMCPService(BaseService):
 
         logger.info(f"Registered MCP tools from {feature_count} features")
 
+        session_manager = self.session_manager
+
+        @mcp.custom_route("/health", methods=["GET"])
+        async def health_check(request):
+            from starlette.responses import JSONResponse
+            return JSONResponse({
+                "status": "ok",
+                "service": "sympy",
+                "active_sessions": session_manager.session_count(),
+            })
+
     def cleanup(self) -> None:
         logger.info("SymPyMCPService cleanup")

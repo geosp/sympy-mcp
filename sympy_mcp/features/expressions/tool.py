@@ -53,3 +53,38 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         """Substitute a variable in an expression with another stored expression."""
         state = session_manager.get_or_create_sync(session_id)
         return state.substitute_expression(expr_key, var_name, replacement_expr_key)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def factor_expression(session_id: str, expr_key: str) -> str:
+        """Factor an expression into irreducible components."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.factor_expression(expr_key)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def expand_expression(session_id: str, expr_key: str) -> str:
+        """Expand a product or power into a sum of terms."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.expand_expression(expr_key)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def collect_expression(session_id: str, expr_key: str, var_name: str) -> str:
+        """Collect and group terms by powers of a variable."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.collect_expression(expr_key, var_name)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def apart_expression(session_id: str, expr_key: str, var_name: str) -> str:
+        """Decompose a rational expression into partial fractions."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.apart_expression(expr_key, var_name)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_instruction("instructions.md", __file__))
+    async def evalf_expression(session_id: str, expr_key: str, n: int = 15) -> str:
+        """Numerically evaluate an expression to n significant digits."""
+        state = session_manager.get_or_create_sync(session_id)
+        return state.evalf_expression(expr_key, n)
