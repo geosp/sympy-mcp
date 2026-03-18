@@ -50,6 +50,7 @@ class SymPyState:
 
     def __init__(self) -> None:
         self.local_vars: Dict[str, Any] = {}
+        self.user_symbols: Dict[str, Any] = {}  # only user-introduced symbols (not units)
         self.functions: Dict[str, Any] = {}
         self.expressions: Dict[str, Any] = {}
         self.metrics: Dict[str, Any] = {}
@@ -186,6 +187,7 @@ class SymPyState:
             )
 
         self.local_vars[var_name] = var
+        self.user_symbols[var_name] = var
         return var_name
 
     def intro_many(self, variables: List[Any]) -> str:
@@ -968,6 +970,7 @@ class SymPyState:
 
     def reset_state(self) -> str:
         self.local_vars.clear()
+        self.user_symbols.clear()
         self.functions.clear()
         self.expressions.clear()
         self.metrics.clear()
@@ -976,3 +979,35 @@ class SymPyState:
         self.expression_counter = 0
         self.initialize_units()
         return "State reset successfully. All variables, functions, expressions, and other objects have been cleared."
+
+    def list_session_state(self) -> str:
+        """Return JSON string of all stored items grouped by category."""
+        import json
+        result: Dict[str, Any] = {}
+        if self.user_symbols:
+            result["symbols"] = list(self.user_symbols.keys())
+        if self.expressions:
+            result["expressions"] = {k: str(v) for k, v in self.expressions.items()}
+        if self.functions:
+            result["functions"] = list(self.functions.keys())
+        if self.coordinate_systems:
+            result["coordinate_systems"] = list(self.coordinate_systems.keys())
+        if self.metrics:
+            result["metrics"] = list(self.metrics.keys())
+        if self.tensor_objects:
+            result["tensors"] = list(self.tensor_objects.keys())
+        return json.dumps(result, indent=2) if result else "{}"
+
+    def delete_stored_key(self, key: str) -> str:
+        """Delete a stored item by key, searching all stores."""
+        for store_name, store in [
+            ("expressions", self.expressions),
+            ("functions", self.functions),
+            ("coordinate_systems", self.coordinate_systems),
+            ("metrics", self.metrics),
+            ("tensor_objects", self.tensor_objects),
+        ]:
+            if key in store:
+                del store[key]
+                return f"'{key}' deleted from {store_name}."
+        return f"Error: Key '{key}' not found in any store."

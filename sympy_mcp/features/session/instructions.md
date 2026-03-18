@@ -67,3 +67,36 @@ Unit constants (meter, second, kilogram, etc.) are re-initialized automatically 
 **Returns:** `"State reset successfully. All variables, functions, expressions, and other objects have been cleared."`
 
 Useful when starting a new problem within the same session, or to free memory from large intermediate expressions.
+
+---
+
+## list_session_state
+
+Inspect all stored items in the current session. Returns a JSON object showing:
+- `symbols` — user-introduced variable names (e.g. `["x", "y"]`)
+- `expressions` — stored expression keys and their current values (e.g. `{"expr_0": "x**2 + 1"}`)
+- `functions` — defined symbolic functions (e.g. `["f"]`)
+- `coordinate_systems` — 3D coordinate system names
+- `metrics` — relativity metric names
+- `tensors` — computed tensor names
+
+Returns `{}` if the session is empty.
+
+**Parameters:**
+- `session_id` (str): The session to inspect.
+
+**Returns:** JSON string. Use this when you need to know what `expr_key` values are available before chaining calls, or to recover state in a long session.
+
+---
+
+## delete_stored_key
+
+Delete a single stored item by key. Searches all stores (expressions, functions, coordinate_systems, metrics, tensors) and removes the first match.
+
+**Parameters:**
+- `session_id` (str): The session to modify.
+- `key` (str): The key to delete (e.g. `"expr_2"`, `"f"`, `"R"`).
+
+**Returns:** Confirmation string on success, or an error if the key is not found.
+
+Use this to remove intermediate results without resetting the entire session.
