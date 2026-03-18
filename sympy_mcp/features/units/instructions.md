@@ -4,6 +4,8 @@ Use the same `session_id` across all calls to share state. Physical quantity exp
 
 All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
 
+Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
+
 Pre-loaded units available in all sessions: `meter`, `second`, `kilogram`, `ampere`, `kelvin`, `mole`, `candela`, `kilometer`, `millimeter`, `gram`, `joule`, `newton`, `pascal`, `watt`, `coulomb`, `volt`, `ohm`, `farad`, `henry`, `speed_of_light`, `gravitational_constant`, `planck`, `day`, `year`, `minute`, `hour`.
 
 ---

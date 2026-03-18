@@ -4,6 +4,8 @@ Use the same `session_id` across all calls to share state. Symbols must be intro
 
 All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `matrix_key` or `expr_key` in subsequent calls).
 
+Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
+
 ---
 
 ## create_matrix

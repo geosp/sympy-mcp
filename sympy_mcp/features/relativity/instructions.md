@@ -4,11 +4,7 @@ Use the same `session_id` across all calls to share state. See `POST /session/re
 
 All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `metric_key` or `tensor_key` in subsequent calls).
 
-> **Note:** This feature requires the optional `einsteinpy` package. Install it with:
-> ```
-> pip install einsteinpy
-> ```
-> If `einsteinpy` is not installed, all tools will return an error string indicating the missing dependency.
+Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
 ---
 
