@@ -135,16 +135,18 @@ sequenceDiagram
 
 ## Session and State Model
 
-Each unique `session_id` maps to an isolated `SymPyState` instance. Sessions must be explicitly created via `create_session` (MCP) or `POST /sessions` (REST), which returns a server-generated UUID. Unknown session IDs are rejected with a `SessionNotFoundError`.
+Each unique `session_id` maps to a `SessionEntry` (metadata + an isolated `SymPyState` instance). Sessions must be explicitly created via `create_session` (MCP) or `POST /sessions` (REST), which returns a server-generated UUID. Unknown session IDs are rejected with a `SessionNotFoundError`.
+
+`get_sync()` updates `last_accessed` on every call, enabling future TTL-based eviction (configured via `ttl_seconds` at startup, default 1800 s).
 
 ```mermaid
 flowchart TD
-    subgraph Sessions ["SymPySessionManager (in-memory)"]
-        S1["session_id: 'work_session'\nSymPyState"]
-        S2["session_id: 'test_session'\nSymPyState"]
+    subgraph Manager ["SymPySessionManager (in-memory)\n_store: Dict[str, SessionEntry]"]
+        SE1["session_id: UUID\nSessionEntry\n─────────────\ndescription: str\ncreated_at: datetime\nlast_accessed: datetime"]
+        SE2["session_id: UUID\nSessionEntry\n─────────────\ndescription: str\ncreated_at: datetime\nlast_accessed: datetime"]
     end
 
-    subgraph State ["SymPyState (per session)"]
+    subgraph State ["SymPyState (per SessionEntry)"]
         LV["local_vars\n{x: Symbol('x'), ...}"]
         US["user_symbols\n{x: Symbol('x'), ...}"]
         EX["expressions\n{expr_1: x**2, expr_2: 2*x, ...}"]
@@ -154,13 +156,15 @@ flowchart TD
         TO["tensor_objects\n{riccitensor_...: ...}"]
     end
 
-    S1 --> State
+    SE1 -->|".state"| State
 ```
 
 **Key rules:**
 - All tool calls sharing state **must** use the same `session_id` — different IDs are completely isolated namespaces
+- Session IDs are server-generated UUIDs — clients cannot choose their own
 - `user_symbols` tracks only explicitly introduced symbols (via `intro`/`intro_many`); `local_vars` also includes unit constants loaded at init
 - Most computation methods return a **key** (e.g. `"expr_3"`) that is stored in `expressions` — pass this key as `expr_key` in subsequent tool calls
+- `get_sync()` (used by all tools) touches `last_accessed`; `get()` (async, returns `None` on miss) is available for non-tool code
 
 ---
 
