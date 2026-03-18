@@ -43,6 +43,8 @@ Parse and store an equation lhs = rhs.
 ## print_latex_expression
 Render a stored expression as LaTeX.
 
+**Do NOT use this tool just to inspect or read expression values.** Use `list_session_state` instead — it shows all stored expressions and their values in a single call. Reserve `print_latex_expression` only when you specifically need LaTeX-formatted output for final display to the user.
+
 **Parameters:**
 - `session_id` (str): Session identifier.
 - `expr_key` (str): Session key from a previous call's `result_key` field.
