@@ -5,16 +5,16 @@ from pydantic import BaseModel
 
 class CreateCoordinateSystemRequest(BaseModel):
     session_id: str
-    name: str
+    coord_sys_name: str
     coord_names: Optional[List[str]] = None
 
 
 class CreateVectorFieldRequest(BaseModel):
     session_id: str
     coord_sys_name: str
-    x: str
-    y: str
-    z: str
+    comp_x: str
+    comp_y: str
+    comp_z: str
 
 
 class VectorFieldKeyRequest(BaseModel):

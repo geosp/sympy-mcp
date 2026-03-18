@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.functions.models import (
     IntroduceFunctionRequest, DsolveODERequest, PdsolvePDERequest, FunctionResponse
 )
@@ -19,7 +19,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def introduce_function(request: IntroduceFunctionRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return FunctionResponse(success=False, error=str(e))
         try:
             raw = state.introduce_function(request.func_name)
             if raw in state.functions:
@@ -34,7 +37,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def dsolve(request: DsolveODERequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return FunctionResponse(success=False, error=str(e))
         try:
             result = state.dsolve_ode(request.expr_key, request.func_name, request.hint)
             return FunctionResponse(success=True, result=result)
@@ -47,7 +53,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def pdsolve(request: PdsolvePDERequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return FunctionResponse(success=False, error=str(e))
         try:
             result = state.pdsolve_pde(request.expr_key, request.func_name, request.hint)
             return FunctionResponse(success=True, result=result)

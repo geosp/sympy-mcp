@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.vector_calc.models import (
     CreateCoordinateSystemRequest,
     CreateVectorFieldRequest,
@@ -23,9 +23,12 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def coordinate_system(request: CreateCoordinateSystemRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
         try:
-            raw = state.create_coordinate_system(request.name, request.coord_names)
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return VectorCalcResponse(success=False, error=str(e))
+        try:
+            raw = state.create_coordinate_system(request.coord_sys_name, request.coord_names)
             if raw in state.coordinate_systems:
                 return VectorCalcResponse(success=True, result=raw, result_key=raw)
             return VectorCalcResponse(success=False, error=raw)
@@ -39,10 +42,13 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def vector_field(request: CreateVectorFieldRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return VectorCalcResponse(success=False, error=str(e))
         try:
             raw = state.create_vector_field(
-                request.coord_sys_name, request.x, request.y, request.z
+                request.coord_sys_name, request.comp_x, request.comp_y, request.comp_z
             )
             resolved = state.resolve_result(raw)
             if raw != resolved:
@@ -58,7 +64,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def curl(request: VectorFieldKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return VectorCalcResponse(success=False, error=str(e))
         try:
             raw = state.calculate_curl(request.vector_field_key)
             resolved = state.resolve_result(raw)
@@ -75,7 +84,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def divergence(request: VectorFieldKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return VectorCalcResponse(success=False, error=str(e))
         try:
             raw = state.calculate_divergence(request.vector_field_key)
             resolved = state.resolve_result(raw)
@@ -92,7 +104,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def gradient(request: ScalarFieldKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return VectorCalcResponse(success=False, error=str(e))
         try:
             raw = state.calculate_gradient(request.scalar_field_key)
             resolved = state.resolve_result(raw)

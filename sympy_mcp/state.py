@@ -163,13 +163,13 @@ class SymPyState:
     def intro(
         self,
         var_name: str,
-        pos_assumptions: List[Assumption],
-        neg_assumptions: List[Assumption],
+        assumptions: List[Assumption],
+        negative_assumptions: List[Assumption],
     ) -> str:
         kwargs_for_symbols = {}
-        for a in pos_assumptions:
+        for a in assumptions:
             kwargs_for_symbols[a.value if isinstance(a, Assumption) else a] = True
-        for a in neg_assumptions:
+        for a in negative_assumptions:
             kwargs_for_symbols[a.value if isinstance(a, Assumption) else a] = False
 
         try:
@@ -196,25 +196,25 @@ class SymPyState:
             # Support both object-style (with attrs) and list/string style
             if isinstance(var_def, str):
                 var_name = var_def
-                pos_assumptions: List[Any] = []
-                neg_assumptions: List[Any] = []
+                assumptions: List[Any] = []
+                negative_assumptions: List[Any] = []
             elif isinstance(var_def, (list, tuple)):
                 var_name = var_def[0]
-                pos_assumptions = var_def[1] if len(var_def) > 1 else []
-                neg_assumptions = var_def[2] if len(var_def) > 2 else []
+                assumptions = var_def[1] if len(var_def) > 1 else []
+                negative_assumptions = var_def[2] if len(var_def) > 2 else []
             elif isinstance(var_def, dict):
                 var_name = var_def["var_name"]
-                pos_assumptions = var_def.get("pos_assumptions", [])
-                neg_assumptions = var_def.get("neg_assumptions", [])
+                assumptions = var_def.get("assumptions", [])
+                negative_assumptions = var_def.get("negative_assumptions", [])
             else:
                 var_name = var_def.var_name
-                pos_assumptions = getattr(var_def, "pos_assumptions", [])
-                neg_assumptions = getattr(var_def, "neg_assumptions", [])
+                assumptions = getattr(var_def, "assumptions", [])
+                negative_assumptions = getattr(var_def, "negative_assumptions", [])
 
             # Validate assumption strings against the Assumption enum
             validated_pos: List[Any] = []
             validated_neg: List[Any] = []
-            for a in pos_assumptions:
+            for a in assumptions:
                 if isinstance(a, Assumption):
                     validated_pos.append(a)
                 else:
@@ -224,7 +224,7 @@ class SymPyState:
                         msg = f"Error for variable '{var_name}': Invalid assumption '{a}'. {e}"
                         logger.error(msg)
                         return msg
-            for a in neg_assumptions:
+            for a in negative_assumptions:
                 if isinstance(a, Assumption):
                     validated_neg.append(a)
                 else:
@@ -246,12 +246,12 @@ class SymPyState:
 
     def introduce_expression(
         self,
-        expr_str: str,
+        expression: str,
         canonicalize: bool = True,
         expr_var_name: Optional[str] = None,
     ) -> str:
         parse_dict = self._parse_dict()
-        parsed_expr = parse_expr(expr_str, local_dict=parse_dict, evaluate=canonicalize)
+        parsed_expr = parse_expr(expression, local_dict=parse_dict, evaluate=canonicalize)
         if expr_var_name is None:
             expr_key = f"expr_{self.expression_counter}"
         else:
@@ -260,10 +260,10 @@ class SymPyState:
         self.expression_counter += 1
         return expr_key
 
-    def introduce_equation(self, lhs_str: str, rhs_str: str) -> str:
+    def introduce_equation(self, lhs_expression: str, rhs_expression: str) -> str:
         parse_dict = self._parse_dict()
-        lhs_expr = parse_expr(lhs_str, local_dict=parse_dict)
-        rhs_expr = parse_expr(rhs_str, local_dict=parse_dict)
+        lhs_expr = parse_expr(lhs_expression, local_dict=parse_dict)
+        rhs_expr = parse_expr(rhs_expression, local_dict=parse_dict)
         eq_key = f"eq_{self.expression_counter}"
         self.expressions[eq_key] = Eq(lhs_expr, rhs_expr)
         self.expression_counter += 1
@@ -411,16 +411,16 @@ class SymPyState:
     # ------------------------------------------------------------------
 
     def solve_algebraically(
-        self, expr_key: str, solve_for_var_name: str, domain: Domain = Domain.COMPLEX
+        self, expr_key: str, var_name: str, domain: Domain = Domain.COMPLEX
     ) -> str:
         domain = self._coerce_domain(domain)
         if expr_key not in self.expressions:
             return f"Error: Expression with key '{expr_key}' not found."
-        if solve_for_var_name not in self.local_vars:
-            return f"Error: Variable '{solve_for_var_name}' not found in local_vars. Please introduce it first."
+        if var_name not in self.local_vars:
+            return f"Error: Variable '{var_name}' not found in local_vars. Please introduce it first."
 
         expression_to_solve = self.expressions[expr_key]
-        variable_symbol = self.local_vars[solve_for_var_name]
+        variable_symbol = self.local_vars[var_name]
 
         domain_map = {
             Domain.COMPLEX: sympy.S.Complexes,
@@ -649,15 +649,15 @@ class SymPyState:
         except Exception as e:
             return f"Error computing series expansion: {e}"
 
-    def summation_expression(self, expr_key: str, var_name: str, lower: str, upper: str) -> str:
+    def summation_expression(self, expr_key: str, var_name: str, lower_bound: str, upper_bound: str) -> str:
         if expr_key not in self.expressions:
             return f"Error: Expression with key '{expr_key}' not found."
         if var_name not in self.local_vars:
             return f"Error: Symbol '{var_name}' not found. Introduce it first."
         try:
             var = self.local_vars[var_name]
-            lower_expr = sympy.sympify(lower, locals=self.local_vars)
-            upper_expr = sympy.sympify(upper, locals=self.local_vars)
+            lower_expr = sympy.sympify(lower_bound, locals=self.local_vars)
+            upper_expr = sympy.sympify(upper_bound, locals=self.local_vars)
             result = sympy.summation(self.expressions[expr_key], (var, lower_expr, upper_expr))
             key = self._next_expr_key()
             self.expressions[key] = result
@@ -670,26 +670,26 @@ class SymPyState:
     # ------------------------------------------------------------------
 
     def create_coordinate_system(
-        self, name: str, coord_names: Optional[List[str]] = None
+        self, coord_sys_name: str, coord_names: Optional[List[str]] = None
     ) -> str:
-        if name in self.coordinate_systems:
-            return f"Warning: Overwriting existing coordinate system '{name}'."
+        if coord_sys_name in self.coordinate_systems:
+            return f"Warning: Overwriting existing coordinate system '{coord_sys_name}'."
 
         try:
             if coord_names and len(coord_names) != 3:
                 return "Error: coord_names must contain exactly 3 names for x, y, z coordinates."
 
-            cs = CoordSys3D(name, variable_names=coord_names) if coord_names else CoordSys3D(name)
-            self.coordinate_systems[name] = cs
-            self.expressions[name] = cs
+            cs = CoordSys3D(coord_sys_name, variable_names=coord_names) if coord_names else CoordSys3D(coord_sys_name)
+            self.coordinate_systems[coord_sys_name] = cs
+            self.expressions[coord_sys_name] = cs
 
             for i, base_vector in enumerate(cs.base_vectors()):
                 vector_name = (
-                    f"{name}_{coord_names[i]}" if coord_names else f"{name}_{['x', 'y', 'z'][i]}"
+                    f"{coord_sys_name}_{coord_names[i]}" if coord_names else f"{coord_sys_name}_{['x', 'y', 'z'][i]}"
                 )
                 self.local_vars[vector_name] = base_vector
 
-            return name
+            return coord_sys_name
         except Exception as e:
             return f"Error creating coordinate system: {e}"
 
@@ -1032,13 +1032,13 @@ class SymPyState:
     def create_custom_metric(
         self,
         components: List[List[str]],
-        symbols: List[str],
+        coord_symbols: List[str],
         config: Literal["ll", "uu"] = "ll",
     ) -> str:
         if not EINSTEINPY_AVAILABLE:
             return "Error: EinsteinPy library is not available."
         try:
-            sympy_symbols = sympy.symbols(", ".join(symbols))
+            sympy_symbols = sympy.symbols(", ".join(coord_symbols))
             sympy_symbols_dict = {str(sym): sym for sym in sympy_symbols}
 
             sympy_components = []

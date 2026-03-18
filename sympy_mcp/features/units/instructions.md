@@ -13,8 +13,17 @@ Pre-loaded units available in all sessions: `meter`, `second`, `kilogram`, `ampe
 ## convert_to_units
 Converts a physical quantity expression to specified target units.
 
+**When to use:**
+- When changing between unit systems (e.g., kilometers to meters, joules to eV)
+- When the problem asks to "express in terms of" specific units
+- For compound unit conversions (e.g., m/s to km/h)
+
+**When NOT to use:**
+- On dimensionless or purely symbolic expressions — there are no units to convert
+- When you want to simplify unit expressions without specifying target units — use `quantity_simplify_units`
+
 **Parameters:**
-- `session_id` (str): Session identifier. Pass any string — sessions are auto-created on first use.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to convert (a `result_key` from a previous call). The expression should be a physical quantity (e.g., a value times a unit).
 - `target_units` (list of str): Unit name strings to convert to (e.g., `["meter", "second"]`).
 - `unit_system` (str, optional): Unit system — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
@@ -37,8 +46,16 @@ POST /units/convert
 ## quantity_simplify_units
 Simplifies a physical quantity expression, combining and reducing units where possible.
 
+**When to use:**
+- When an expression has complex/compound units that should be reduced to standard derived units (e.g., `kg*m²/s²` → `joule`)
+- When you want SymPy to automatically determine the simplest unit representation
+
+**When NOT to use:**
+- When you need a specific target unit — use `convert_to_units` with explicit targets
+- On expressions without any unit quantities
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to simplify.
 - `unit_system` (str, optional): Unit system context — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
 

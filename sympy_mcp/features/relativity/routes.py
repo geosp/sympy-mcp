@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.relativity.models import (
     CreatePredefinedMetricRequest,
     SearchPredefinedMetricsRequest,
@@ -24,7 +24,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def create_predefined_metric(request: CreatePredefinedMetricRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return RelativityResponse(success=False, error=str(e))
         try:
             raw = state.create_predefined_metric(request.metric_name)
             resolved = state.resolve_result(raw)
@@ -41,7 +44,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def search_predefined_metrics(request: SearchPredefinedMetricsRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return RelativityResponse(success=False, error=str(e))
         try:
             result = state.search_predefined_metrics(request.query)
             return RelativityResponse(success=True, result=result)
@@ -55,7 +61,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def calculate_tensor(request: CalculateTensorRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return RelativityResponse(success=False, error=str(e))
         try:
             raw = state.calculate_tensor(
                 request.metric_key,
@@ -76,11 +85,14 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def create_custom_metric(request: CreateCustomMetricRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return RelativityResponse(success=False, error=str(e))
         try:
             raw = state.create_custom_metric(
                 request.components,
-                request.symbols,
+                request.coord_symbols,
                 request.config,
             )
             resolved = state.resolve_result(raw)
@@ -97,7 +109,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def print_latex_tensor(request: PrintLatexTensorRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return RelativityResponse(success=False, error=str(e))
         try:
             result = state.print_latex_tensor(request.tensor_key)
             return RelativityResponse(success=True, result=result)

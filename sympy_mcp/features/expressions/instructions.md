@@ -11,9 +11,17 @@ Before calling any tool, carefully read all parameter names, types, and required
 ## introduce_expression
 Parse and store a mathematical expression string.
 
+**When to use:**
+- To enter any new symbolic expression into the session (the starting point for most computations)
+- When you have a formula, equation term, or symbolic quantity that needs to be stored for further manipulation
+
+**When NOT to use:**
+- For equations with `=` — use `introduce_equation` instead (lhs = rhs)
+- For defining unknown functions like `f(x)` for ODEs — use `introduce_function` first
+
 **Parameters:**
-- `session_id` (str): Session identifier. Pass any string — sessions are auto-created on first use.
-- `expr_str` (str): Expression string using SymPy syntax (e.g., `"x**2 + 2*x + 1"`, `"sin(x)*cos(y)"`)
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expression` (str): Expression string using SymPy syntax (e.g., `"x**2 + 2*x + 1"`, `"sin(x)*cos(y)"`)
 - `canonicalize` (bool): If True, simplify/expand the expression. Default: `true`
 - `name` (str, optional): Custom key name (default: auto-generated `"expr_N"`)
 
@@ -22,7 +30,7 @@ Parse and store a mathematical expression string.
 **Example:**
 ```json
 POST /expressions/introduce
-{"session_id": "s1", "expr_str": "x**2 + 2*x + 1"}
+{"session_id": "s1", "expression": "x**2 + 2*x + 1"}
 → {"success": true, "result": "x**2 + 2*x + 1", "result_key": "expr_0"}
 ```
 
@@ -31,10 +39,18 @@ POST /expressions/introduce
 ## introduce_equation
 Parse and store an equation lhs = rhs.
 
+**When to use:**
+- When the problem involves an equality (e.g., `x**2 = 1`, `y = 3*x + 2`)
+- Before calling any solve tool — solvers expect equations, not plain expressions
+
+**When NOT to use:**
+- For standalone expressions without an equality — use `introduce_expression`
+- When the expression is implicitly "= 0" — you can use `introduce_expression` and pass it directly to solvers
+
 **Parameters:**
-- `session_id` (str): Session identifier.
-- `lhs_str` (str): Left-hand side expression string
-- `rhs_str` (str): Right-hand side expression string
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `lhs_expression` (str): Left-hand side expression string
+- `rhs_expression` (str): Right-hand side expression string
 
 **Returns:** `result` — the equation as a string (e.g. `"Eq(x**2, 1)"`); `result_key` — session key for use in solve tools.
 
@@ -43,10 +59,19 @@ Parse and store an equation lhs = rhs.
 ## print_latex_expression
 Render a stored expression as LaTeX.
 
+**When to use:**
+- Only when you need LaTeX-formatted output for final display to the user
+- When the user explicitly asks for a LaTeX rendering
+
+**When NOT to use:**
+- To inspect or read expression values — use `list_session_state` instead
+- To verify intermediate computation results — use `list_session_state`
+- As a routine step after every computation — it wastes a tool call
+
 **Do NOT use this tool just to inspect or read expression values.** Use `list_session_state` instead — it shows all stored expressions and their values in a single call. Reserve `print_latex_expression` only when you specifically need LaTeX-formatted output for final display to the user.
 
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key from a previous call's `result_key` field.
 
 **Returns:** `result` — LaTeX string (e.g. `"x^{2} + 2 x + 1"`). No `result_key` — LaTeX output is not stored in the session.
@@ -56,8 +81,17 @@ Render a stored expression as LaTeX.
 ## substitute_expression
 Substitute a variable with another stored expression.
 
+**When to use:**
+- To plug a computed value or sub-expression into another expression
+- When evaluating a general formula at specific symbolic values
+- To compose results from multiple computation steps
+
+**When NOT to use:**
+- To substitute a numeric constant — introduce the constant as an expression first, then substitute
+- When you just want to evaluate numerically — use `evalf_expression` instead
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to substitute into
 - `var_name` (str): Name of the variable to replace
 - `replacement_expr_key` (str): Session key of the expression to substitute in (a `result_key` from a previous call)
@@ -77,8 +111,17 @@ POST /expressions/substitute
 
 Factor an expression into irreducible components over the rationals.
 
+**When to use:**
+- To find roots or factored form of polynomials
+- When simplifying a polynomial expression by revealing its factors
+- When checking if an expression has a clean factored form
+
+**When NOT to use:**
+- For non-polynomial expressions — use `simplify_expression` instead
+- When you want to group terms by powers of a variable — use `collect_expression`
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to factor.
 
 **Returns:** `result` — the factored expression (e.g. `"(x - 1)*(x + 1)"`); `result_key` — session key for the factored form.
@@ -96,8 +139,17 @@ POST /expressions/factor
 
 Expand a product or power into a sum of terms.
 
+**When to use:**
+- To distribute products (e.g., `(x+1)^2` → `x²+2x+1`)
+- When you need a polynomial in expanded/standard form for further operations
+- Before integrating or differentiating term-by-term
+
+**When NOT to use:**
+- When the factored form is more useful — expanding may lose structure
+- When simplification is the goal — use `simplify_expression` instead
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to expand.
 
 **Returns:** `result` — the expanded expression (e.g. `"x**2 + 2*x + 1"`); `result_key` — session key.
@@ -115,8 +167,16 @@ POST /expressions/expand
 
 Collect and group terms by powers of a variable.
 
+**When to use:**
+- To organize a multivariate polynomial by powers of a specific variable
+- When you need to see the coefficient structure with respect to a variable
+
+**When NOT to use:**
+- For single-variable polynomials that are already in standard form
+- When you want full factorization — use `factor_expression`
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to collect.
 - `var_name` (str): Variable name to collect by.
 
@@ -135,8 +195,16 @@ POST /expressions/collect
 
 Decompose a rational expression into partial fractions.
 
+**When to use:**
+- Before integrating a rational function — partial fractions make integration straightforward
+- When decomposing transfer functions or rational expressions in engineering problems
+
+**When NOT to use:**
+- For non-rational expressions (no denominator polynomial)
+- When the expression is already in simple terms
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the rational expression.
 - `var_name` (str): Variable to decompose with respect to.
 
@@ -155,8 +223,19 @@ POST /expressions/apart
 
 Numerically evaluate an expression to a specified number of significant digits.
 
+**When to use:**
+- After obtaining a symbolic result that needs a decimal approximation
+- When the user asks "what does that equal numerically?"
+- When verifying a symbolic result against expected numeric values
+- For final numeric answers alongside the exact symbolic form
+
+**When NOT to use:**
+- When an exact symbolic answer is sufficient and no numeric value was requested
+- To inspect symbolic expression structure — use `list_session_state`
+- On expressions containing free variables (the result will still be symbolic)
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to evaluate.
 - `n` (int, optional): Number of significant digits. Default: `15`.
 

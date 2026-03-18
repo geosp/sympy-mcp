@@ -98,6 +98,8 @@ The sympy-mcp server provides the following tools for symbolic mathematics:
 | Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Ricci, Einstein, Weyl tensors) |
 | Custom Metric | `create_custom_metric` | Creates a custom metric tensor from provided components and symbols |
 | Tensor LaTeX | `print_latex_tensor` | Prints a stored tensor expression in LaTeX format |
+| Session Creator | `create_session` | Creates a new isolated session and returns a unique session_id |
+| Session Lister | `list_sessions` | Lists all active sessions with their descriptions and timestamps |
 | Session Reset | `reset_state` | Clears all expressions, symbols, and functions from the session |
 | Session Inspector | `list_session_state` | Lists all stored keys in the session grouped by category |
 | Key Deletion | `delete_stored_key` | Deletes a stored item by key, searching all stores |
@@ -318,7 +320,7 @@ $$ m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + kx = F(t) $$
 **Assistant**: (Internal tool call) `introduce_expression` to create the differential equation:
 ```json
 {
-  "expr_str": "Eq(m*Derivative(x(t), t, t) + c*Derivative(x(t), t) + k*x(t), F(t))"
+  "expression": "Eq(m*Derivative(x(t), t, t) + c*Derivative(x(t), t) + k*x(t), F(t))"
 }
 ```
 

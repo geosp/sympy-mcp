@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.linear_algebra.models import (
     CreateMatrixRequest,
     MatrixKeyRequest,
@@ -21,7 +21,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def create_matrix(request: CreateMatrixRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return LinearAlgebraResponse(success=False, error=str(e))
         try:
             raw = state.create_matrix(request.matrix_data, request.name)
             resolved = state.resolve_result(raw)
@@ -38,7 +41,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def determinant(request: MatrixKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return LinearAlgebraResponse(success=False, error=str(e))
         try:
             raw = state.matrix_determinant(request.matrix_key)
             resolved = state.resolve_result(raw)
@@ -55,7 +61,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def inverse(request: MatrixKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return LinearAlgebraResponse(success=False, error=str(e))
         try:
             raw = state.matrix_inverse(request.matrix_key)
             resolved = state.resolve_result(raw)
@@ -72,7 +81,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def eigenvalues(request: MatrixKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return LinearAlgebraResponse(success=False, error=str(e))
         try:
             raw = state.matrix_eigenvalues(request.matrix_key)
             resolved = state.resolve_result(raw)
@@ -89,7 +101,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def eigenvectors(request: MatrixKeyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return LinearAlgebraResponse(success=False, error=str(e))
         try:
             raw = state.matrix_eigenvectors(request.matrix_key)
             resolved = state.resolve_result(raw)

@@ -3,6 +3,10 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class CreateSessionRequest(BaseModel):
+    description: str = ""
+
+
 class ResetStateRequest(BaseModel):
     session_id: str
 

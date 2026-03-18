@@ -12,8 +12,8 @@ class IntegrateRequest(BaseModel):
     session_id: str
     expr_key: str
     var_name: str
-    lower: Optional[str] = None
-    upper: Optional[str] = None
+    lower_bound: Optional[str] = None
+    upper_bound: Optional[str] = None
 
 
 class DifferentiateRequest(BaseModel):
@@ -43,8 +43,8 @@ class SummationRequest(BaseModel):
     session_id: str
     expr_key: str
     var_name: str
-    lower: str
-    upper: str
+    lower_bound: str
+    upper_bound: str
 
 
 class CalculusResponse(BaseModel):

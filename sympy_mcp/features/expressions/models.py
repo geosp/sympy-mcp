@@ -5,15 +5,15 @@ from pydantic import BaseModel
 
 class IntroduceExpressionRequest(BaseModel):
     session_id: str
-    expr_str: str
+    expression: str
     canonicalize: bool = True
     name: Optional[str] = None
 
 
 class IntroduceEquationRequest(BaseModel):
     session_id: str
-    lhs_str: str
-    rhs_str: str
+    lhs_expression: str
+    rhs_expression: str
 
 
 class PrintLatexRequest(BaseModel):

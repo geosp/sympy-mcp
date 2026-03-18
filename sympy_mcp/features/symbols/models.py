@@ -7,8 +7,8 @@ from sympy_mcp.shared.enums import Assumption
 class IntroRequest(BaseModel):
     session_id: str
     var_name: str
-    pos_assumptions: List[Assumption] = []
-    neg_assumptions: List[Assumption] = []
+    assumptions: List[Assumption] = []
+    negative_assumptions: List[Assumption] = []
 
 
 class IntroManyRequest(BaseModel):

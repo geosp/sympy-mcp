@@ -4,16 +4,46 @@ A **session** is an isolated in-memory namespace that stores your symbolic varia
 
 ---
 
-## Getting a session_id
+## create_session
 
-**Option A — Create explicitly:**
+Before calling any other tool, you **must** create a session using `create_session`. The server generates a unique session ID (UUID) and returns it. You then pass this ID as `session_id` to all subsequent tool calls.
+
+**When to use:**
+- As the very first step before any symbolic computation
+- When starting a new, independent problem (create a fresh session rather than reusing an old one)
+
+**When NOT to use:**
+- When a session already exists for the current problem — reuse the existing `session_id`
+
+**Parameters:**
+- `description` (str): A short description of the session's purpose (e.g., `"Hooke's law spring work integral"`).
+
+**Returns:** JSON with `session_id` (the generated UUID), `description`, and `created_at`.
+
+**Example:**
 ```
-POST /sessions
-→ {"session_id": "abc-123-uuid"}
+create_session(description="Hooke's law spring work integral")
+→ {"session_id": "a1b2c3d4-...", "description": "Hooke's law spring work integral", "created_at": "..."}
 ```
 
-**Option B — Use any string (auto-create):**
-Sessions are created automatically on first use. You can pass any unique string as `session_id` (e.g. `"my-session"`, `"user-42"`) without calling `POST /sessions` first.
+**Do NOT invent your own session IDs.** Only IDs returned by `create_session` are valid. Any tool call with an unknown `session_id` will be rejected with an error.
+
+---
+
+## list_sessions
+
+Use `list_sessions` to see all active sessions with their descriptions and timestamps. This is useful when resuming work or checking what sessions exist on the server.
+
+**When to use:**
+- When resuming a previous conversation and you need to find an existing session ID
+- To check whether a session from an earlier interaction is still alive
+
+**When NOT to use:**
+- During normal computation flow — you already have the `session_id` from `create_session`
+
+**Parameters:** None.
+
+**Returns:** JSON with `sessions` (list of session objects) and `count`.
 
 ---
 
@@ -22,18 +52,18 @@ Sessions are created automatically on first use. You can pass any unique string 
 Multi-step computations build up state across calls using the same `session_id`:
 
 ```
-1. POST /symbols/intro          {session_id, var_name: "x"}
-2. POST /expressions/introduce  {session_id, expr_str: "x**2"}
-   → {result: "x**2", result_key: "expr_0"}
-3. POST /calculus/differentiate {session_id, expr_key: "expr_0", var_name: "x"}
-   → {result: "2*x", result_key: "expr_1"}
-4. POST /calculus/integrate     {session_id, expr_key: "expr_1", var_name: "x"}
-   → {result: "x**2", result_key: "expr_2"}
-5. POST /session/list_state     {session_id}
+1. create_session(description="differentiation example")
+   → session_id = "a1b2c3d4-..."
+2. intro(session_id, var_name="x")
+3. introduce_expression(session_id, expression="x**2")
+   → stored as expr_0
+4. differentiate_expression(session_id, expr_key="expr_0", var_name="x")
+   → stored as expr_1, value: 2*x
+5. list_session_state(session_id)
    → shows all symbols and expression values at a glance
 ```
 
-Symbols introduced with `/symbols/intro` are referenced by name in expression strings. Expressions are referenced by their `result_key` in subsequent computation calls.
+Symbols introduced with `intro` are referenced by name in expression strings. Expressions are referenced by their stored key (e.g. `expr_0`) in subsequent computation calls.
 
 **Tip:** Use `list_session_state` to inspect computed values directly. Avoid calling `print_latex_expression` on each result individually just to read values — the state listing already shows every stored expression and its current value.
 
@@ -66,15 +96,24 @@ Clears all session data and returns the session to its initial state.
 Unit constants (meter, second, kilogram, etc.) are re-initialized automatically after the reset.
 
 **Parameters:**
-- `session_id` (str): The session to reset.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 
 **Returns:** `"State reset successfully. All variables, functions, expressions, and other objects have been cleared."`
 
-Useful when starting a new problem within the same session, or to free memory from large intermediate expressions.
+**When to use:**
+- When pivoting to a completely different problem within the same session
+- To free memory from large intermediate expressions that are no longer needed
+- When accumulated state is causing confusion or naming conflicts
+
+**When NOT to use:**
+- Between related sub-problems that share variables — you will lose all symbols and expressions
+- Just to "clean up" after getting a final answer — it destroys useful state
 
 ---
 
 ## list_session_state
+
+**This is the primary tool for inspecting computed values and session contents.**
 
 Inspect all stored items in the current session. Returns a JSON object showing:
 - `symbols` — user-introduced variable names (e.g. `["x", "y"]`)
@@ -87,9 +126,18 @@ Inspect all stored items in the current session. Returns a JSON object showing:
 Returns `{}` if the session is empty.
 
 **Parameters:**
-- `session_id` (str): The session to inspect.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 
 **Returns:** JSON string. Use this when you need to know what `expr_key` values are available before chaining calls, or to recover state in a long session.
+
+**When to use:**
+- After any computation to verify/inspect the result — this is your go-to inspection tool
+- To see what `expr_key` or `matrix_key` values are available before chaining calls
+- To recover context in a long session or after multiple steps
+- When you need to read expression values — always prefer this over `print_latex_expression`
+
+**When NOT to use:**
+- There is no reason to avoid this tool; call it liberally whenever you need to check state
 
 **Prefer this tool for inspecting results.** Rather than calling `print_latex_expression` on each expression key to see its value, call `list_session_state` once to see all stored expressions and their values. Reserve `print_latex_expression` for when you specifically need LaTeX-formatted output for display.
 
@@ -99,10 +147,16 @@ Returns `{}` if the session is empty.
 
 Delete a single stored item by key. Searches all stores (expressions, functions, coordinate_systems, metrics, tensors) and removes the first match.
 
+**When to use:**
+- To remove specific intermediate results that clutter the session without resetting everything
+- When a stored key has the wrong value and you want to recompute it cleanly
+
+**When NOT to use:**
+- To clear the entire session — use `reset_state` instead
+- When the stored result might be needed later in the computation chain
+
 **Parameters:**
-- `session_id` (str): The session to modify.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `key` (str): The key to delete (e.g. `"expr_2"`, `"f"`, `"R"`).
 
 **Returns:** Confirmation string on success, or an error if the key is not found.
-
-Use this to remove intermediate results without resetting the entire session.

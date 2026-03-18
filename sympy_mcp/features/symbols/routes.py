@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.symbols.models import IntroRequest, IntroManyRequest, SymbolResponse
 
 logger = logging.getLogger(__name__)
@@ -17,9 +17,12 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def intro(request: IntroRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
         try:
-            result = state.intro(request.var_name, request.pos_assumptions, request.neg_assumptions)
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return SymbolResponse(success=False, error=str(e))
+        try:
+            result = state.intro(request.var_name, request.assumptions, request.negative_assumptions)
             return SymbolResponse(success=True, result=result)
         except Exception as e:
             logger.error(f"intro error: {e}")
@@ -31,7 +34,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def intro_many(request: IntroManyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return SymbolResponse(success=False, error=str(e))
         try:
             result = state.intro_many(request.variables)
             return SymbolResponse(success=True, result=result)

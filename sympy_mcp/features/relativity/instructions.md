@@ -11,8 +11,16 @@ Before calling any tool, carefully read all parameter names, types, and required
 ## create_predefined_metric
 Load a standard spacetime metric by name. The metric is stored in the session under a key of the form `metric_<name>`.
 
+**When to use:**
+- When the problem involves a well-known spacetime (Schwarzschild, Kerr, Minkowski, etc.)
+- As the starting point for tensor calculations in general relativity
+
+**When NOT to use:**
+- When the metric is non-standard or user-defined — use `create_custom_metric`
+- When you're unsure which metric to use — try `search_predefined_metrics` first
+
 **Parameters:**
-- `session_id` (str): Session identifier. Pass any string — sessions are auto-created on first use.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_name` (str): One of the predefined metric enum values (see table below).
 
 **Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_Schwarzschild"`) for use in `calculate_tensor`.
@@ -53,8 +61,15 @@ POST /relativity/metric/predefined
 ## search_predefined_metrics
 Search for available metrics by keyword.
 
+**When to use:**
+- When you're unsure of the exact metric name or want to explore what's available
+- When the user describes a spacetime by informal name and you need to find the matching enum value
+
+**When NOT to use:**
+- When you already know the exact metric enum name — use `create_predefined_metric` directly
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `query` (str): Search keyword (delegated to `einsteinpy.symbolic.predefined.find`).
 
 **Returns:** `result` — list of matching metric names as a string.
@@ -64,8 +79,16 @@ Search for available metrics by keyword.
 ## calculate_tensor
 Compute a curvature tensor from a stored metric.
 
+**When to use:**
+- For computing Ricci scalar, Ricci tensor, Riemann tensor, Einstein tensor, Weyl tensor, etc.
+- When the problem involves curvature, geodesics, or field equations in GR
+
+**When NOT to use:**
+- Before creating a metric — you must have a stored metric first
+- For non-GR tensor operations (e.g., stress tensors in classical mechanics)
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_key` (str): Session key of a stored metric (a `result_key` from `create_predefined_metric` or `create_custom_metric`).
 - `tensor_type` (str): One of the tensor type enum values (see table below).
 - `simplify` (bool, optional): Whether to simplify the result with `sympy.simplify`. Default: `true`. Set to `false` for large metrics.
@@ -96,10 +119,19 @@ POST /relativity/tensor/calculate
 ## create_custom_metric
 Define a metric from an explicit component array.
 
+**When to use:**
+- When the spacetime metric is non-standard and not in the predefined list
+- For user-defined or parameterized metrics
+- For lower-dimensional toy metrics (e.g., 2D surfaces)
+
+**When NOT to use:**
+- For standard metrics like Schwarzschild or Kerr — use `create_predefined_metric` (less error-prone)
+- When you're unsure of the components — check the predefined list first
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `components` (list of list of str): 2D list of SymPy expression strings (e.g. `[["1", "0"], ["0", "r**2"]]`). Use `"0"` for zero components.
-- `symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`).
+- `coord_symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`).
 - `config` (str, optional): Index configuration — `"ll"` for covariant (default) or `"uu"` for contravariant.
 
 **Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_custom_0"`) for use in `calculate_tensor`.
@@ -107,7 +139,7 @@ Define a metric from an explicit component array.
 **Example (flat 2D polar metric):**
 ```json
 POST /relativity/metric/custom
-{"session_id": "s1", "components": [["1", "0"], ["0", "r**2"]], "symbols": ["r", "theta"], "config": "ll"}
+{"session_id": "s1", "components": [["1", "0"], ["0", "r**2"]], "coord_symbols": ["r", "theta"], "config": "ll"}
 → {"success": true, "result": "...", "result_key": "metric_custom_0"}
 ```
 
@@ -116,8 +148,16 @@ POST /relativity/metric/custom
 ## print_latex_tensor
 Render a stored tensor or metric as a LaTeX string.
 
+**When to use:**
+- Only for final display of tensor/metric results to the user in LaTeX format
+- When the user explicitly requests LaTeX output for a tensor
+
+**When NOT to use:**
+- To inspect tensor values — use `list_session_state`
+- As a routine step after every tensor computation
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `tensor_key` (str): Session key of a stored tensor or metric (a `result_key` from any previous call).
 
 **Returns:** `result` — LaTeX string. No `result_key` — LaTeX output is not stored in the session.

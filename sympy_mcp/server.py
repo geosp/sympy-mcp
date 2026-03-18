@@ -80,9 +80,11 @@ class SymPyMCPServer(BaseMCPServer):
             }
 
         @router.post("/sessions")
-        async def create_session():
-            session_id = await session_manager.create()
-            return {"session_id": session_id}
+        async def create_session(request: Request):
+            body = await request.json() if request.headers.get("content-type", "").startswith("application/json") else {}
+            description = body.get("description", "")
+            result = await session_manager.create(description)
+            return result
 
         @router.delete("/sessions/{session_id}")
         async def destroy_session(session_id: str):

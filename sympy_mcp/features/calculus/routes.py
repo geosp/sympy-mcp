@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.calculus.models import (
     SimplifyRequest,
     IntegrateRequest,
@@ -25,7 +25,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def simplify(request: SimplifyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
         try:
             raw = state.simplify_expression(request.expr_key)
             resolved = state.resolve_result(raw)
@@ -42,10 +45,13 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def integrate(request: IntegrateRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
         try:
             raw = state.integrate_expression(
-                request.expr_key, request.var_name, request.lower, request.upper
+                request.expr_key, request.var_name, request.lower_bound, request.upper_bound
             )
             resolved = state.resolve_result(raw)
             if raw != resolved:
@@ -61,7 +67,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def differentiate(request: DifferentiateRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
         try:
             raw = state.differentiate_expression(
                 request.expr_key, request.var_name, request.order
@@ -80,7 +89,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def limit(request: LimitRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
         try:
             raw = state.limit_expression(request.expr_key, request.var_name, request.point, request.direction)
             resolved = state.resolve_result(raw)
@@ -97,7 +109,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def series(request: SeriesExpansionRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
         try:
             raw = state.series_expansion(request.expr_key, request.var_name, request.point, request.order)
             if raw.startswith("Error"):
@@ -114,9 +129,12 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def summation(request: SummationRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
         try:
-            raw = state.summation_expression(request.expr_key, request.var_name, request.lower, request.upper)
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return CalculusResponse(success=False, error=str(e))
+        try:
+            raw = state.summation_expression(request.expr_key, request.var_name, request.lower_bound, request.upper_bound)
             resolved = state.resolve_result(raw)
             if raw != resolved:
                 return CalculusResponse(success=True, result=resolved, result_key=raw)

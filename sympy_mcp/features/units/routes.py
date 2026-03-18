@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.units.models import (
     ConvertToUnitsRequest,
     QuantitySimplifyRequest,
@@ -21,7 +21,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def convert(request: ConvertToUnitsRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return UnitsResponse(success=False, error=str(e))
         try:
             raw = state.convert_to_units(
                 request.expr_key, request.target_units, request.unit_system
@@ -40,7 +43,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def simplify(request: QuantitySimplifyRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return UnitsResponse(success=False, error=str(e))
         try:
             raw = state.quantity_simplify_units(request.expr_key, request.unit_system)
             resolved = state.resolve_result(raw)

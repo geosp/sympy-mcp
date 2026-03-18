@@ -7,7 +7,7 @@ from sympy_mcp.shared.enums import Domain
 class SolveAlgebraicallyRequest(BaseModel):
     session_id: str
     expr_key: str
-    solve_for_var_name: str
+    var_name: str
     domain: Domain = Domain.COMPLEX
 
 

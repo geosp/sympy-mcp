@@ -2,7 +2,7 @@
 import logging
 from fastapi import APIRouter
 from core.utils import load_instruction
-from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.features.expressions.models import (
     IntroduceExpressionRequest, IntroduceEquationRequest,
     PrintLatexRequest, SubstituteExpressionRequest,
@@ -22,9 +22,12 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def introduce_expression(request: IntroduceExpressionRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
         try:
-            raw = state.introduce_expression(request.expr_str, request.canonicalize, request.name)
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
+        try:
+            raw = state.introduce_expression(request.expression, request.canonicalize, request.name)
             resolved = state.resolve_result(raw)
             if raw != resolved:
                 return ExpressionResponse(success=True, result=resolved, result_key=raw)
@@ -38,9 +41,12 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def introduce_equation(request: IntroduceEquationRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
         try:
-            raw = state.introduce_equation(request.lhs_str, request.rhs_str)
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
+        try:
+            raw = state.introduce_equation(request.lhs_expression, request.rhs_expression)
             resolved = state.resolve_result(raw)
             if raw != resolved:
                 return ExpressionResponse(success=True, result=resolved, result_key=raw)
@@ -54,7 +60,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def print_latex(request: PrintLatexRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             result = state.print_latex_expression(request.expr_key)
             return ExpressionResponse(success=True, result=result)
@@ -67,7 +76,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def substitute(request: SubstituteExpressionRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.substitute_expression(request.expr_key, request.var_name, request.replacement_expr_key)
             resolved = state.resolve_result(raw)
@@ -83,7 +95,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def factor(request: FactorRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.factor_expression(request.expr_key)
             resolved = state.resolve_result(raw)
@@ -99,7 +114,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def expand(request: ExpandRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.expand_expression(request.expr_key)
             resolved = state.resolve_result(raw)
@@ -115,7 +133,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def collect(request: CollectRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.collect_expression(request.expr_key, request.var_name)
             resolved = state.resolve_result(raw)
@@ -131,7 +152,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def apart(request: ApartRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.apart_expression(request.expr_key, request.var_name)
             resolved = state.resolve_result(raw)
@@ -147,7 +171,10 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
         description=load_instruction("instructions.md", __file__),
     )
     async def evalf(request: EvalfRequest):
-        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            state = session_manager.get_sync(request.session_id)
+        except SessionNotFoundError as e:
+            return ExpressionResponse(success=False, error=str(e))
         try:
             raw = state.evalf_expression(request.expr_key, request.n)
             resolved = state.resolve_result(raw)

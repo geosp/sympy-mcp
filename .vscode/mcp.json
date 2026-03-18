@@ -2,8 +2,8 @@
   "servers": {
     "sympy-mcp": {
       "type": "http",
-      //"url": "http://localhost:8082/mcp"
-      "url": "http://agentgateway.mixwarecs-home.net/sympy-mcp/mcp"
+      "url": "http://localhost:8082/mcp"
+      //"url": "http://agentgateway.mixwarecs-home.net/sympy-mcp/mcp"
     }
   }
 }

@@ -43,6 +43,7 @@ Each capability area is a Python package under `sympy_mcp/features/`. Every feat
 
 ```
 sympy_mcp/features/<feature>/
+├── instructions.md # Tool descriptions loaded into MCP docstrings at runtime
 ├── models.py       # Pydantic request/response models
 ├── routes.py       # REST routes — create_router(session_manager) → APIRouter
 └── tool.py         # MCP tools — register_tool(mcp, session_manager)
@@ -77,10 +78,11 @@ flowchart LR
 
 ### Adding a new feature
 
-1. Create `sympy_mcp/features/<name>/` with `models.py`, `routes.py`, `tool.py`
-2. Implement `create_router(session_manager) -> APIRouter` in `routes.py`
-3. Implement `register_tool(mcp, session_manager)` in `tool.py`
-4. Add the computation method to `SymPyState` in `sympy_mcp/state.py`
+1. Create `sympy_mcp/features/<name>/` with `instructions.md`, `models.py`, `routes.py`, `tool.py`
+2. Write tool descriptions in `instructions.md` — these are injected as MCP docstrings at runtime
+3. Implement `create_router(session_manager) -> APIRouter` in `routes.py`
+4. Implement `register_tool(mcp, session_manager)` in `tool.py`
+5. Add the computation method to `SymPyState` in `sympy_mcp/state.py`
 
 Both `routes.py` and `tool.py` **must** be updated — they are independent registrations.
 
@@ -100,7 +102,7 @@ sequenceDiagram
 
     Client->>FastMCP: tools/call {name, arguments}
     FastMCP->>Tool: registered async fn(session_id, ...)
-    Tool->>SM: get_or_create_sync(session_id)
+    Tool->>SM: get_sync(session_id)
     SM-->>Tool: SymPyState instance
     Tool->>State: state.method(args)
     State-->>Tool: result key or value
@@ -120,7 +122,7 @@ sequenceDiagram
 
     Client->>FastAPI: POST /expressions/factor {session_id, expr_key}
     FastAPI->>Route: route handler(request: FactorRequest)
-    Route->>SM: get_or_create_sync(session_id)
+    Route->>SM: get_sync(session_id)
     SM-->>Route: SymPyState instance
     Route->>State: state.factor_expression(expr_key)
     State-->>Route: raw key (e.g. "expr_3")
@@ -133,7 +135,7 @@ sequenceDiagram
 
 ## Session and State Model
 
-Each unique `session_id` maps to an isolated `SymPyState` instance. Sessions are created lazily on first use and expire after a configurable TTL (default: 1 hour).
+Each unique `session_id` maps to an isolated `SymPyState` instance. Sessions must be explicitly created via `create_session` (MCP) or `POST /sessions` (REST), which returns a server-generated UUID. Unknown session IDs are rejected with a `SessionNotFoundError`.
 
 ```mermaid
 flowchart TD
@@ -168,7 +170,7 @@ Computation tools use a key-based chaining pattern to avoid serializing large sy
 
 ```mermaid
 flowchart LR
-    I["introduce_expression\nexpr_str: 'x**2 - 1'"] -->|"result_key: 'expr_1'"| F
+    I["introduce_expression\nexpression: 'x**2 - 1'"] -->|"result_key: 'expr_1'"| F
     F["factor_expression\nexpr_key: 'expr_1'"] -->|"result_key: 'expr_2'"| L
     L["print_latex_expression\nexpr_key: 'expr_2'"] -->|"result: '(x-1)(x+1)'"| OUT["Display"]
 ```

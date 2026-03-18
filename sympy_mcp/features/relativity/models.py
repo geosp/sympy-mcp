@@ -24,7 +24,7 @@ class CalculateTensorRequest(BaseModel):
 class CreateCustomMetricRequest(BaseModel):
     session_id: str
     components: List[List[str]]
-    symbols: List[str]
+    coord_symbols: List[str]
     config: str = "ll"
 
 

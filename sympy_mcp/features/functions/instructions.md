@@ -11,8 +11,16 @@ Before calling any tool, carefully read all parameter names, types, and required
 ## introduce_function
 Introduce a symbolic function for use in differential equations.
 
+**When to use:**
+- Before setting up an ODE or PDE that involves an unknown function (e.g., `f(x)`, `u(x,t)`)
+- When you need `f(x)` notation in expression strings for `dsolve_ode` or `pdsolve_pde`
+
+**When NOT to use:**
+- For symbolic variables (plain `x`, `y`) — use `intro` or `intro_many`
+- For known/explicit functions like `sin(x)` — these are built into SymPy and don't need introduction
+
 **Parameters:**
-- `session_id` (str): Session identifier. Pass any string — sessions are auto-created on first use.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `func_name` (str): Name of the function (e.g., `"f"`, `"g"`, `"u"`).
 
 **Returns:** `result` — the function name confirming creation (e.g. `"f"`). No `result_key` — functions are referenced by name, not by key.
@@ -29,8 +37,17 @@ POST /functions/introduce
 ## dsolve_ode
 Solve an ordinary differential equation.
 
+**When to use:**
+- For ODEs involving an unknown function of one variable (e.g., `f''(x) + f(x) = 0`)
+- When the problem asks to "solve the differential equation" with ordinary derivatives
+
+**When NOT to use:**
+- For PDEs (partial differential equations) — use `pdsolve_pde`
+- For algebraic equations (no derivatives) — use `solve_algebraically`
+- When you haven't yet introduced the function with `introduce_function`
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the ODE expression (the equation, which should equal 0).
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): ODE solver hint. Default: `"default"`.
@@ -49,8 +66,16 @@ POST /functions/dsolve
 ## pdsolve_pde
 Solve a partial differential equation.
 
+**When to use:**
+- For PDEs involving an unknown function of multiple variables (e.g., `u_xx + u_yy = 0`)
+- When partial derivatives appear in the equation
+
+**When NOT to use:**
+- For ODEs (one independent variable) — use `dsolve_ode`
+- For algebraic systems — use solving tools
+
 **Parameters:**
-- `session_id` (str): Session identifier.
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the PDE expression.
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): PDE solver hint. Default: `"default"`.
