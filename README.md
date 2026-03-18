@@ -12,7 +12,7 @@ Language models are absolutely abysmal at symbolic manipulation. They hallucinat
 
 While you can certainly have an LLM generate Mathematica or Python code, if you want to use the LLM as an agent or on-the-fly calculator, it's a better experience to use the MCP server and expose the symbolic tools directly.
 
-The server exposes a subset of symbolic mathematics capabilities including algebraic equation solving, integration and differentiation, vector calculus, tensor calculus for general relativity, and both ordinary and partial differential equations. 
+The server exposes a subset of symbolic mathematics capabilities including algebraic equation solving, integration and differentiation, vector calculus, tensor calculus for general relativity, and both ordinary and partial differential equations.
 
 For example, you can ask it in natural language to solve a differential equation:
 
@@ -31,33 +31,25 @@ You need [uv](https://docs.astral.sh/uv/getting-started/installation/) first.
 - **Homebrew** : `brew install uv`
 - **Curl** : `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
-Then you can install and run the server with the following commands:
+Then clone and install:
 
 ```shell
-# Setup the project
 git clone https://github.com/sdiehl/sympy-mcp.git
 cd sympy-mcp
 uv sync
-
-# Install the server to Claude Desktop
-uv run mcp install server.py
-
-# Run the server
-uv run mcp run server.py
 ```
 
-You should see the server available in the Claude Desktop app now. For other clients, see below.
-
-If you want a completely standalone version that just runs with a single command, you can use the following. *Note this is running arbitrary code from Github, so be careful.*
+The server has three run modes:
 
 ```shell
-uv run --with https://github.com/sdiehl/sympy-mcp/releases/download/0.1/sympy_mcp-0.1.0-py3-none-any.whl python server.py
-```
+# stdio transport — for Claude Desktop, Cursor, and other subprocess-based clients
+uv run sympy-mcp --mode stdio
 
-If you want to do general relativity calculations, you need to install the [`einsteinpy`](https://github.com/einsteinpy/einsteinpy) library.
+# MCP HTTP server — streamable-HTTP transport, listens on :8081/mcp
+uv run sympy-mcp --mode mcp --port 8081
 
-```shell
-uv sync --group relativity
+# REST API — direct HTTP access for testing and custom integrations
+uv run sympy-mcp --mode rest --port 8081
 ```
 
 ## Available Tools
@@ -69,36 +61,48 @@ The sympy-mcp server provides the following tools for symbolic mathematics:
 | Variable Introduction | `intro` | Introduces a variable with specified assumptions and stores it |
 | Multiple Variables | `intro_many` | Introduces multiple variables with specified assumptions simultaneously |
 | Expression Parser | `introduce_expression` | Parses an expression string using available local variables and stores it |
+| Equation Parser | `introduce_equation` | Parses and stores an equation (lhs = rhs) |
 | LaTeX Printer | `print_latex_expression` | Prints a stored expression in LaTeX format, along with variable assumptions |
+| Substitution | `substitute_expression` | Substitutes a variable with an expression in another expression |
+| Factorer | `factor_expression` | Factors an expression into irreducible components |
+| Expander | `expand_expression` | Expands a product or power into a sum of terms |
+| Collector | `collect_expression` | Collects and groups terms by powers of a variable |
+| Partial Fractions | `apart_expression` | Decomposes a rational expression into partial fractions |
+| Numeric Evaluator | `evalf_expression` | Numerically evaluates an expression to n significant digits |
+| Simplifier | `simplify_expression` | Simplifies a mathematical expression using SymPy's canonicalize function |
+| Integration | `integrate_expression` | Integrates an expression with respect to a variable |
+| Differentiation | `differentiate_expression` | Differentiates an expression with respect to a variable |
+| Limit | `limit_expression` | Computes the limit of an expression as a variable approaches a point |
+| Series Expansion | `series_expansion` | Computes the Taylor/Maclaurin series expansion of an expression |
+| Summation | `summation_expression` | Computes a symbolic summation over a variable range |
 | Algebraic Solver | `solve_algebraically` | Solves an equation algebraically for a given variable over a given domain |
 | Linear Solver | `solve_linear_system` | Solves a system of linear equations |
 | Nonlinear Solver | `solve_nonlinear_system` | Solves a system of nonlinear equations |
 | Function Variable | `introduce_function` | Introduces a function variable for use in differential equations |
 | ODE Solver | `dsolve_ode` | Solves an ordinary differential equation |
 | PDE Solver | `pdsolve_pde` | Solves a partial differential equation |
-| Standard Metric | `create_predefined_metric` | Creates a predefined spacetime metric (e.g. Schwarzschild, Kerr, Minkowski) |
-| Metric Search | `search_predefined_metrics` | Searches available predefined metrics |
-| Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Ricci, Einstein, Weyl tensors) |
-| Custom Metric | `create_custom_metric` | Creates a custom metric tensor from provided components and symbols |
-| Tensor LaTeX | `print_latex_tensor` | Prints a stored tensor expression in LaTeX format |
-| Simplifier | `simplify_expression` | Simplifies a mathematical expression using SymPy's canonicalize function |
-| Substitution | `substitute_expression` | Substitutes a variable with an expression in another expression |
-| Integration | `integrate_expression` | Integrates an expression with respect to a variable |
-| Differentiation | `differentiate_expression` | Differentiates an expression with respect to a variable |
-| Coordinates | `create_coordinate_system` | Creates a 3D coordinate system for vector calculus operations |
-| Vector Field | `create_vector_field` | Creates a vector field in the specified coordinate system |
-| Curl | `calculate_curl` | Calculates the curl of a vector field |
-| Divergence | `calculate_divergence` | Calculates the divergence of a vector field |
-| Gradient | `calculate_gradient` | Calculates the gradient of a scalar field |
-| Unit Converter | `convert_to_units` | Converts a quantity to given target units |
-| Unit Simplifier | `quantity_simplify_units` | Simplifies a quantity with units |
 | Matrix Creator | `create_matrix` | Creates a SymPy matrix from the provided data |
 | Determinant | `matrix_determinant` | Calculates the determinant of a matrix |
 | Matrix Inverse | `matrix_inverse` | Calculates the inverse of a matrix |
 | Eigenvalues | `matrix_eigenvalues` | Calculates the eigenvalues of a matrix |
 | Eigenvectors | `matrix_eigenvectors` | Calculates the eigenvectors of a matrix |
+| Unit Converter | `convert_to_units` | Converts a quantity to given target units |
+| Unit Simplifier | `quantity_simplify_units` | Simplifies a quantity with units |
+| Coordinates | `create_coordinate_system` | Creates a 3D coordinate system for vector calculus operations |
+| Vector Field | `create_vector_field` | Creates a vector field in the specified coordinate system |
+| Curl | `calculate_curl` | Calculates the curl of a vector field |
+| Divergence | `calculate_divergence` | Calculates the divergence of a vector field |
+| Gradient | `calculate_gradient` | Calculates the gradient of a scalar field |
+| Standard Metric | `create_predefined_metric` | Creates a predefined spacetime metric (e.g. Schwarzschild, Kerr, Minkowski) |
+| Metric Search | `search_predefined_metrics` | Searches available predefined metrics |
+| Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Ricci, Einstein, Weyl tensors) |
+| Custom Metric | `create_custom_metric` | Creates a custom metric tensor from provided components and symbols |
+| Tensor LaTeX | `print_latex_tensor` | Prints a stored tensor expression in LaTeX format |
+| Session Reset | `reset_state` | Clears all expressions, symbols, and functions from the session |
+| Session Inspector | `list_session_state` | Lists all stored keys in the session grouped by category |
+| Key Deletion | `delete_stored_key` | Deletes a stored item by key, searching all stores |
 
-By default variables are predefined with assumptions (similar to how the [symbols()](https://docs.sympy.org/latest/modules/core.html#sympy.core.symbol.symbols) function works in SymPy). Unless otherwise specified the defaut assumptions is that a variable is complex, commutative, term over the complex field $\mathbb{C}$.
+By default variables are predefined with assumptions (similar to how the [symbols()](https://docs.sympy.org/latest/modules/core.html#sympy.core.symbol.symbols) function works in SymPy). Unless otherwise specified the default assumptions is that a variable is complex, commutative, a term over the complex field $\mathbb{C}$.
 
 | Property | Value |
 |----------|-------|
@@ -109,31 +113,23 @@ By default variables are predefined with assumptions (similar to how the [symbol
 
 ## Claude Desktop Setup
 
-Normally the `mcp install` command will automatically add the server to the `claude_desktop_config.json` file. If it doesn't you need to find the config file and add the following:
+Add the following to your `claude_desktop_config.json`, replacing `/ABSOLUTE_PATH_TO_SYMPY_MCP` with the path to the cloned repo:
 
 * macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 * Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-Add the following to the `mcpServers` object, replacing `/ABSOLUTE_PATH_TO_SYMPY_MCP/server.py` with the absolute path to the sympy-mcp `server.py` file.
 
 ```json
 {
   "mcpServers": {
     "sympy-mcp": {
-      "command": "/opt/homebrew/bin/uv",
+      "command": "uv",
       "args": [
+        "--directory",
+        "/ABSOLUTE_PATH_TO_SYMPY_MCP",
         "run",
-        "--with",
-        "einsteinpy",
-        "--with",
-        "mcp[cli]",
-        "--with",
-        "pydantic",
-        "--with",
-        "sympy",
-        "mcp",
-        "run",
-        "/ABSOLUTE_PATH_TO_SYMPY_MCP/server.py"
+        "sympy-mcp",
+        "--mode",
+        "stdio"
       ]
     }
   }
@@ -142,26 +138,20 @@ Add the following to the `mcpServers` object, replacing `/ABSOLUTE_PATH_TO_SYMPY
 
 ## Cursor Setup
 
-In your `~/.cursor/mcp.json`, add the following, where `ABSOLUTE_PATH_TO_SYMPY_MCP` is the path to the sympy-mcp server.py file.
+In your `~/.cursor/mcp.json`, add the following:
 
 ```json
 {
   "mcpServers": {
     "sympy-mcp": {
-      "command": "/opt/homebrew/bin/uv",
+      "command": "uv",
       "args": [
+        "--directory",
+        "/ABSOLUTE_PATH_TO_SYMPY_MCP",
         "run",
-        "--with",
-        "einsteinpy",
-        "--with",
-        "mcp[cli]",
-        "--with",
-        "pydantic",
-        "--with",
-        "sympy",
-        "mcp",
-        "run",
-        "/ABSOLUTE_PATH_TO_SYMPY_MCP/server.py"
+        "sympy-mcp",
+        "--mode",
+        "stdio"
       ]
     }
   }
@@ -178,7 +168,7 @@ VS Code and VS Code Insiders now support MCPs in [agent mode](https://code.visua
 
 [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=sympy-mcp&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-p%22%2C%228081%3A8081%22%2C%22--rm%22%2C%22ghcr.io%2Fsdiehl%2Fsympy-mcp%3Amain%22%5D%7D&quality=insiders)
 
-OR manually add the config to your `settings.json` (global):
+OR manually add to your `settings.json` (global):
 
 ```json
 {
@@ -187,18 +177,12 @@ OR manually add the config to your `settings.json` (global):
       "sympy-mcp": {
         "command": "uv",
         "args": [
+          "--directory",
+          "/ABSOLUTE_PATH_TO_SYMPY_MCP",
           "run",
-          "--with",
-          "einsteinpy",
-          "--with",
-          "mcp[cli]",
-          "--with",
-          "pydantic",
-          "--with",
-          "sympy",
-          "mcp",
-          "run",
-          "/ABSOLUTE_PATH_TO_SYMPY_MCP/server.py"
+          "sympy-mcp",
+          "--mode",
+          "stdio"
         ]
       }
     }
@@ -206,16 +190,20 @@ OR manually add the config to your `settings.json` (global):
 }
 ```
 
-2. Click "Start" above the server config switch to agent mode in the chat, and try commands like "integrate x^2" or "solve x^2 = 1" to get started.
+2. Click "Start" above the server config, switch to agent mode in the chat, and try commands like "integrate x^2" or "solve x^2 = 1" to get started.
 
 ## Cline Setup
 
-To use with [Cline](https://cline.bot/), you need to manually run the MCP server first using the commands in the "Usage" section. Once the MCP server is running, open Cline and select "MCP Servers" at the top.
+To use with [Cline](https://cline.bot/), first start the MCP HTTP server:
 
-Then select "Remote Servers" and add the following:
+```shell
+uv run sympy-mcp --mode mcp --port 8081 --no-auth
+```
+
+Then open Cline, select "MCP Servers" → "Remote Servers" and add:
 
 - Server Name: `sympy-mcp`
-- Server URL: `http://127.0.0.1:8081/sse`
+- Server URL: `http://127.0.0.1:8081/mcp`
 
 ## 5ire Setup
 
@@ -225,27 +213,29 @@ To set up with [5ire](https://github.com/nanbingxyz/5ire), open 5ire and go to T
 
 - Tool Key: `sympy-mcp`
 - Name: SymPy MCP
-- Command: `/opt/homebrew/bin/uv run --with einsteinpy --with mcp[cli] --with pydantic --with sympy mcp run /ABSOLUTE_PATH_TO/server.py`
+- Command: `/opt/homebrew/bin/uv --directory /ABSOLUTE_PATH_TO_SYMPY_MCP run sympy-mcp --mode stdio`
 
-Replace `/ABSOLUTE_PATH_TO/server.py` with the actual path to your sympy-mcp server.py file.
+Replace `/ABSOLUTE_PATH_TO_SYMPY_MCP` with the actual path to the cloned repo.
 
-## HTTP Transport (Streamable HTTP / SSE)
+## HTTP Transport (Streamable HTTP)
 
-The server supports MCP over HTTP using the [streamable-http transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) introduced in MCP spec 2025-03-26. This replaces the legacy SSE transport and exposes a single `/mcp` endpoint that clients connect to over HTTP.
+The server supports MCP over HTTP using the [streamable-HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) introduced in MCP spec 2025-03-26. This exposes a single `/mcp` endpoint that clients connect to over HTTP.
 
 This is the recommended transport when running the server as a standalone process or in a container, because it allows any HTTP-capable MCP client to connect without needing to launch the server as a subprocess.
 
 ```bash
-# Run locally with HTTP transport
-uv run python server.py --transport streamable-http
+# Run MCP HTTP server locally
+uv run sympy-mcp --mode mcp --port 8081 --no-auth
 
-# Override host/port
-uv run python server.py --transport streamable-http --mcp-host 127.0.0.1 --mcp-port 9000
+# Run REST API locally (useful for debugging and custom integrations)
+uv run sympy-mcp --mode rest --port 8081 --no-auth
 ```
 
-The legacy `--transport sse` flag is still supported for backward compatibility.
+A `/health` endpoint is exposed in both modes, returning:
 
-A `/healthcheck` endpoint is also exposed that runs a full MCP protocol round-trip (initialize → tools/list → session teardown) and returns `{"status": "ok", "tool_count": N}`.
+```json
+{"status": "ok", "service": "sympy", "active_sessions": 0}
+```
 
 ## Running in Container
 
@@ -255,28 +245,33 @@ You can build and run the server using Docker locally:
 # Build the Docker image
 docker build -t sympy-mcp .
 
-# Run the Docker container
-docker run -p 8081:8081 sympy-mcp
+# Run as MCP HTTP server (port 8081, /mcp endpoint)
+docker run -p 8081:8081 sympy-mcp uv run sympy-mcp --mode mcp --host 0.0.0.0 --port 8081 --no-auth
+
+# Run as REST API (port 8081)
+docker run -p 8081:8081 sympy-mcp uv run sympy-mcp --mode rest --host 0.0.0.0 --port 8081 --no-auth
 ```
 
-Or use Docker Compose from the `docker/` directory:
+Or use Docker Compose from the `docker/` directory, which starts both services simultaneously:
 
 ```bash
 cd docker
 docker compose up -d --build
 ```
 
-Alternatively, you can pull the pre-built image from GitHub Container Registry:
+This starts:
+- `sympy-mcp-rest` — REST API on **port 8081**
+- `sympy-mcp-mcp` — MCP HTTP server on **port 8082** (`/mcp` endpoint)
+
+Alternatively, pull the pre-built image from GitHub Container Registry:
 
 ```bash
-# Pull the latest image
 docker pull ghcr.io/sdiehl/sympy-mcp:main
-
-# Run the container
-docker run -p 8081:8081 --rm ghcr.io/sdiehl/sympy-mcp:main
+docker run -p 8081:8081 --rm ghcr.io/sdiehl/sympy-mcp:main \
+  uv run sympy-mcp --mode mcp --host 0.0.0.0 --port 8081 --no-auth
 ```
 
-To configure Claude Desktop to launch the Docker container, edit your `claude_desktop_config.json` file:
+To configure Claude Desktop to launch the Docker container directly:
 
 ```json
 {
@@ -284,41 +279,14 @@ To configure Claude Desktop to launch the Docker container, edit your `claude_de
     "sympy-mcp": {
       "command": "docker",
       "args": [
-        "run",
-        "-i",
-        "-p",
-        "8081:8081",
-        "--rm",
-        "sympy-mcp"
+        "run", "-i", "--rm",
+        "sympy-mcp",
+        "uv", "run", "sympy-mcp", "--mode", "stdio"
       ]
     }
   }
 }
 ```
-
-Or to use the pre-built container from GitHub:
-
-```json
-{
-  "mcpServers": {
-    "sympy-mcp": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "-p",
-        "8081:8081",
-        "--rm",
-        "ghcr.io/sdiehl/sympy-mcp:main"
-      ]
-    }
-  }
-}
-```
-
-This configuration tells Claude Desktop to launch the Docker container when needed. Make sure to build the Docker image (`docker build -t sympy-mcp .`) before using Claude Desktop with this configuration.
-
-The other installation methods can also be adapted to work with Docker if you change the uv command to use the docker run command instead.
 
 ## Example Interaction 1 : Differential Equations
 
@@ -471,8 +439,13 @@ $$A_1 \frac{dh_1}{dt} = Q - k(h_1 - h_2), \quad A_2 \frac{dh_2}{dt} = k(h_1 - h_
 
 ## Security Disclaimer
 
-This server runs on your computer and gives the language model access to run Python logic. Notably it uses Sympy's `parse_expr` to parse mathematical expressions, which is uses `eval` under the hood, effectively allowing arbitrary code execution. By running the server, you are trusting the code that Claude generates. Running in the Docker image is slightly safer, but it's still a good idea to review the code before running it.
+This server runs on your computer and gives the language model access to run Python logic. Notably it uses Sympy's `parse_expr` to parse mathematical expressions, which uses `eval` under the hood, effectively allowing arbitrary code execution. By running the server, you are trusting the code that Claude generates. Running in the Docker image is slightly safer, but it's still a good idea to review the code before running it.
 
+
+## Contributors
+
+- [Stephen Diehl](https://github.com/sdiehl) — original author
+- [Geovanny Fajardo](https://github.com/geosp) — new MCP architecture (dual-transport, feature auto-discovery, session management), REST API, Docker deployment, and expanded tool set (algebraic manipulation, calculus completion, state management)
 
 ## License
 
