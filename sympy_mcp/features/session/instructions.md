@@ -29,9 +29,13 @@ Multi-step computations build up state across calls using the same `session_id`:
    → {result: "2*x", result_key: "expr_1"}
 4. POST /calculus/integrate     {session_id, expr_key: "expr_1", var_name: "x"}
    → {result: "x**2", result_key: "expr_2"}
+5. POST /session/list_state     {session_id}
+   → shows all symbols and expression values at a glance
 ```
 
 Symbols introduced with `/symbols/intro` are referenced by name in expression strings. Expressions are referenced by their `result_key` in subsequent computation calls.
+
+**Tip:** Use `list_session_state` to inspect computed values directly. Avoid calling `print_latex_expression` on each result individually just to read values — the state listing already shows every stored expression and its current value.
 
 ---
 
@@ -86,6 +90,8 @@ Returns `{}` if the session is empty.
 - `session_id` (str): The session to inspect.
 
 **Returns:** JSON string. Use this when you need to know what `expr_key` values are available before chaining calls, or to recover state in a long session.
+
+**Prefer this tool for inspecting results.** Rather than calling `print_latex_expression` on each expression key to see its value, call `list_session_state` once to see all stored expressions and their values. Reserve `print_latex_expression` for when you specifically need LaTeX-formatted output for display.
 
 ---
 
