@@ -620,6 +620,51 @@ class SymPyState:
         except Exception as e:
             return f"Error during differentiation: {e}"
 
+    def limit_expression(self, expr_key: str, var_name: str, point: str, direction: str = "+") -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        if var_name not in self.local_vars:
+            return f"Error: Symbol '{var_name}' not found. Introduce it first."
+        try:
+            point_expr = sympy.sympify(point, locals=self.local_vars)
+            result = sympy.limit(self.expressions[expr_key], self.local_vars[var_name], point_expr, dir=direction)
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error computing limit: {e}"
+
+    def series_expansion(self, expr_key: str, var_name: str, point: str = "0", order: int = 6) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        if var_name not in self.local_vars:
+            return f"Error: Symbol '{var_name}' not found. Introduce it first."
+        try:
+            point_expr = sympy.sympify(point, locals=self.local_vars)
+            full_series = self.expressions[expr_key].series(self.local_vars[var_name], point_expr, order)
+            stored = full_series.removeO()
+            key = self._next_expr_key()
+            self.expressions[key] = stored
+            return f"{key}|||{str(full_series)}"
+        except Exception as e:
+            return f"Error computing series expansion: {e}"
+
+    def summation_expression(self, expr_key: str, var_name: str, lower: str, upper: str) -> str:
+        if expr_key not in self.expressions:
+            return f"Error: Expression with key '{expr_key}' not found."
+        if var_name not in self.local_vars:
+            return f"Error: Symbol '{var_name}' not found. Introduce it first."
+        try:
+            var = self.local_vars[var_name]
+            lower_expr = sympy.sympify(lower, locals=self.local_vars)
+            upper_expr = sympy.sympify(upper, locals=self.local_vars)
+            result = sympy.summation(self.expressions[expr_key], (var, lower_expr, upper_expr))
+            key = self._next_expr_key()
+            self.expressions[key] = result
+            return key
+        except Exception as e:
+            return f"Error computing summation: {e}"
+
     # ------------------------------------------------------------------
     # Vector calculus
     # ------------------------------------------------------------------

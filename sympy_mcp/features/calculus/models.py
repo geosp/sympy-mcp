@@ -23,6 +23,30 @@ class DifferentiateRequest(BaseModel):
     order: int = 1
 
 
+class LimitRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    var_name: str
+    point: str
+    direction: str = "+"
+
+
+class SeriesExpansionRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    var_name: str
+    point: str = "0"
+    order: int = 6
+
+
+class SummationRequest(BaseModel):
+    session_id: str
+    expr_key: str
+    var_name: str
+    lower: str
+    upper: str
+
+
 class CalculusResponse(BaseModel):
     success: bool
     result: Optional[str] = None

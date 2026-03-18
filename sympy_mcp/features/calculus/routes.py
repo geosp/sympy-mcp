@@ -7,6 +7,9 @@ from sympy_mcp.features.calculus.models import (
     SimplifyRequest,
     IntegrateRequest,
     DifferentiateRequest,
+    LimitRequest,
+    SeriesExpansionRequest,
+    SummationRequest,
     CalculusResponse,
 )
 
@@ -69,6 +72,57 @@ def create_router(session_manager: SymPySessionManager) -> APIRouter:
             return CalculusResponse(success=False, error=raw)
         except Exception as e:
             logger.error(f"differentiate error: {e}")
+            return CalculusResponse(success=False, error=str(e))
+
+    @router.post(
+        "/limit",
+        response_model=CalculusResponse,
+        description=load_instruction("instructions.md", __file__),
+    )
+    async def limit(request: LimitRequest):
+        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            raw = state.limit_expression(request.expr_key, request.var_name, request.point, request.direction)
+            resolved = state.resolve_result(raw)
+            if raw != resolved:
+                return CalculusResponse(success=True, result=resolved, result_key=raw)
+            return CalculusResponse(success=False, error=raw)
+        except Exception as e:
+            logger.error(f"limit error: {e}")
+            return CalculusResponse(success=False, error=str(e))
+
+    @router.post(
+        "/series",
+        response_model=CalculusResponse,
+        description=load_instruction("instructions.md", __file__),
+    )
+    async def series(request: SeriesExpansionRequest):
+        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            raw = state.series_expansion(request.expr_key, request.var_name, request.point, request.order)
+            if raw.startswith("Error"):
+                return CalculusResponse(success=False, error=raw)
+            key, display = raw.split("|||", 1)
+            return CalculusResponse(success=True, result=display, result_key=key)
+        except Exception as e:
+            logger.error(f"series error: {e}")
+            return CalculusResponse(success=False, error=str(e))
+
+    @router.post(
+        "/summation",
+        response_model=CalculusResponse,
+        description=load_instruction("instructions.md", __file__),
+    )
+    async def summation(request: SummationRequest):
+        state = session_manager.get_or_create_sync(request.session_id)
+        try:
+            raw = state.summation_expression(request.expr_key, request.var_name, request.lower, request.upper)
+            resolved = state.resolve_result(raw)
+            if raw != resolved:
+                return CalculusResponse(success=True, result=resolved, result_key=raw)
+            return CalculusResponse(success=False, error=raw)
+        except Exception as e:
+            logger.error(f"summation error: {e}")
             return CalculusResponse(success=False, error=str(e))
 
     return router
