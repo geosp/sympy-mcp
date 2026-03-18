@@ -1008,6 +1008,69 @@ def simplify_expression(expr_key: str) -> str:
 
 
 @mcp.tool()
+def evalf_expression(
+    expr_key: str,
+    n: int = 15,
+    subs: Optional[str] = None,
+    store_result: bool = False,
+) -> str:
+    """Numerically evaluates a stored expression using SymPy's evalf method.
+
+    Args:
+        expr_key: The key of the expression (previously introduced) to evaluate.
+        n: Number of significant digits to compute (default: 15).
+        subs: Optional substitution string of the form "x=1.5, y=3" to assign
+              numeric values to symbols before evaluation.
+        store_result: If True, store the numeric result back into expressions
+                      and return its key. Otherwise return the numeric string.
+
+    Example:
+        # Introduce a variable and an expression involving pi
+        intro("x", [Assumption.REAL], [])
+        expr_key = introduce_expression("pi + x")
+
+        # Evaluate numerically with x=1, 10 significant digits
+        result = evalf_expression(expr_key, n=10, subs="x=1")
+        # Returns "4.141592654"
+
+        # Evaluate pi to 50 digits (no substitution needed for constants)
+        expr_key2 = introduce_expression("pi")
+        result2 = evalf_expression(expr_key2, n=50)
+        # Returns "3.14159265358979323846264338327950288419716939937510"
+
+    Returns:
+        The numeric value as a string, or a key if store_result is True.
+    """
+    global expression_counter
+
+    if expr_key not in expressions:
+        return f"Error: Expression with key '{expr_key}' not found."
+
+    try:
+        expr = expressions[expr_key]
+
+        if subs:
+            sub_dict = {}
+            for pair in subs.split(","):
+                k, v = pair.strip().split("=")
+                sym = local_vars.get(k.strip()) or sympy.Symbol(k.strip())
+                sub_dict[sym] = float(v.strip())
+            expr = expr.subs(sub_dict)
+
+        result = expr.evalf(n)
+
+        if store_result:
+            result_key = f"expr_{expression_counter}"
+            expressions[result_key] = result
+            expression_counter += 1
+            return f"{result_key}: {result}"
+
+        return str(result)
+    except Exception as e:
+        return f"Error during numerical evaluation: {str(e)}"
+
+
+@mcp.tool()
 def integrate_expression(
     expr_key: str,
     var_name: str,
