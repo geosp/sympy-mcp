@@ -1,8 +1,18 @@
 services:
-  sympy-mcp:
+  sympy-mcp-rest:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    command: ["uv", "run", "sympy-mcp", "--mode", "rest", "--host", "0.0.0.0", "--port", "8081", "--no-auth"]
+    restart: unless-stopped
+
+  sympy-mcp-mcp:
     build:
       context: ..
       dockerfile: Dockerfile
     ports:
       - "8082:8081"
+    command: ["uv", "run", "sympy-mcp", "--mode", "mcp", "--host", "0.0.0.0", "--port", "8081", "--no-auth"]
     restart: unless-stopped
