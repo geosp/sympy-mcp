@@ -80,6 +80,7 @@ The sympy-mcp server provides the following tools for symbolic mathematics:
 | Nonlinear Solver | `solve_nonlinear_system` | Solves a system of nonlinear equations |
 | Function Variable | `introduce_function` | Introduces a function variable for use in differential equations |
 | ODE Solver | `dsolve_ode` | Solves an ordinary differential equation |
+| Coupled ODE Solver | `dsolve_system` | Solves a coupled system of ordinary differential equations |
 | PDE Solver | `pdsolve_pde` | Solves a partial differential equation |
 | Matrix Creator | `create_matrix` | Creates a SymPy matrix from the provided data |
 | Determinant | `matrix_determinant` | Calculates the determinant of a matrix |
@@ -459,7 +460,7 @@ This example demonstrates solving a coupled system of ODEs and verifying the sol
 $$A_1 \frac{dh_1}{dt} = Q - k(h_1 - h_2), \quad A_2 \frac{dh_2}{dt} = k(h_1 - h_2) - k h_2$$
 
 4. `substitute_expression` — substitute numeric values for `k`, `A1`, `A2`, `Q`
-5. `dsolve_ode` × 2 — solve the coupled system; apply initial conditions via `substitute_expression`
+5. `dsolve_system` — solve the coupled system directly; apply initial conditions via `substitute_expression`
 6. `introduce_expression` × 2 — encode equilibrium equations (derivatives set to zero)
 7. `solve_linear_system` — solve the 2×2 algebraic system for `h1*`, `h2*`
 8. `print_latex_expression` — display both the time-domain solution and the steady-state values
