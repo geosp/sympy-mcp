@@ -536,6 +536,29 @@ class SymPyState:
         except Exception as e:
             return f"An unexpected error occurred: {e}"
 
+    def dsolve_system(self, expr_keys: List[str], func_names: List[str]) -> str:
+        for expr_key in expr_keys:
+            if expr_key not in self.expressions:
+                return f"Error: Expression with key '{expr_key}' not found."
+        for func_name in func_names:
+            if func_name not in self.functions:
+                return f"Error: Function '{func_name}' not found. Please introduce it first."
+
+        equations = []
+        for expr_key in expr_keys:
+            expr = self.expressions[expr_key]
+            equations.append(expr if isinstance(expr, sympy.Eq) else sympy.Eq(expr, 0))
+
+        try:
+            solution = dsolve(equations)
+            if isinstance(solution, list):
+                return ", ".join(sympy.latex(s) for s in solution)
+            return sympy.latex(solution)
+        except NotImplementedError as e:
+            return f"Error: Method not implemented: {e}."
+        except Exception as e:
+            return f"An unexpected error occurred: {e}"
+
     def pdsolve_pde(
         self, expr_key: str, func_name: str, hint: Optional[PDEHint] = None
     ) -> str:

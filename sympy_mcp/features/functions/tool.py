@@ -1,5 +1,6 @@
 """MCP tools for functions and differential equations."""
 import logging
+from typing import List
 from fastmcp import FastMCP
 from core.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
@@ -36,6 +37,20 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         except SessionNotFoundError as e:
             return str(e)
         return state.dsolve_ode(expr_key, func_name, hint)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "dsolve_system"))
+    async def dsolve_system(
+        session_id: str,
+        expr_keys: List[str],
+        func_names: List[str],
+    ) -> str:
+        """Solve a coupled system of ordinary differential equations."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return str(e)
+        return state.dsolve_system(expr_keys, func_names)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "pdsolve_pde"))

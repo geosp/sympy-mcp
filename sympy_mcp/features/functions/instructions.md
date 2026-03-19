@@ -63,6 +63,34 @@ POST /functions/dsolve
 
 ---
 
+## dsolve_system
+Solve a coupled system of ordinary differential equations.
+
+**When to use:**
+- For 2+ coupled ODEs sharing the same independent variable (e.g., `dh1/dt = ...`, `dh2/dt = ...`)
+- When `dsolve_ode` would require manually reducing to a single higher-order equation
+
+**When NOT to use:**
+- For a single ODE — use `dsolve_ode`
+- For PDEs — use `pdsolve_pde`
+- When functions haven't been introduced with `introduce_function`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_keys` (list[str]): Session keys of the ODE expressions (each should equal 0 or be an `Eq`).
+- `func_names` (list[str]): Names of the functions to solve for (each must be introduced with `introduce_function`).
+
+**Returns:** `result` — comma-separated LaTeX solutions, one per equation; `result_key` — not returned (chain via `introduce_expression` if needed).
+
+**Example:**
+```json
+POST /functions/dsolve-system
+{"session_id": "s1", "expr_keys": ["expr_0", "expr_1"], "func_names": ["h1", "h2"]}
+→ {"success": true, "result": "Eq(h_{1}(t), ...), Eq(h_{2}(t), ...)"}
+```
+
+---
+
 ## pdsolve_pde
 Solve a partial differential equation.
 

@@ -1,5 +1,5 @@
 """Pydantic models for functions feature."""
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 from sympy_mcp.shared.enums import ODEHint, PDEHint
 
@@ -14,6 +14,12 @@ class DsolveODERequest(BaseModel):
     expr_key: str
     func_name: str
     hint: ODEHint = ODEHint.FACTORABLE
+
+
+class DsolveSystemRequest(BaseModel):
+    session_id: str
+    expr_keys: List[str]
+    func_names: List[str]
 
 
 class PdsolvePDERequest(BaseModel):

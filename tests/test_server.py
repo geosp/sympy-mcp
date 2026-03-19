@@ -339,6 +339,46 @@ class TestDsolveOdeTool:
         assert "error" in result.lower()
 
 
+class TestDsolveSystemTool:
+    def test_coupled_system(self):
+        state = SymPyState()
+        state.intro("t", [Assumption.REAL], [])
+        state.introduce_function("h1")
+        state.introduce_function("h2")
+
+        # dh1/dt = -0.15*h1(t) + 0.3*h2(t) + 0.25
+        # dh2/dt = 0.3*h1(t) - 0.6*h2(t)
+        eq1_key = state.introduce_expression(
+            "Derivative(h1(t), t) - (-0.15*h1(t) + 0.3*h2(t) + 0.25)"
+        )
+        eq2_key = state.introduce_expression(
+            "Derivative(h2(t), t) - (0.3*h1(t) - 0.6*h2(t))"
+        )
+
+        result = state.dsolve_system([eq1_key, eq2_key], ["h1", "h2"])
+
+        assert "h_{1}" in result or "h1" in result
+        assert "h_{2}" in result or "h2" in result
+        assert "error" not in result.lower()
+
+    def test_nonexistent_expression(self):
+        state = SymPyState()
+        state.introduce_function("h1")
+        state.introduce_function("h2")
+        result = state.dsolve_system(["nonexistent_key", "expr_1"], ["h1", "h2"])
+        assert "error" in result.lower()
+
+    def test_nonexistent_function(self):
+        state = SymPyState()
+        state.intro("t", [Assumption.REAL], [])
+        state.introduce_function("h1")
+        state.introduce_function("h2")
+        eq1_key = state.introduce_expression("Derivative(h1(t), t) + h1(t)")
+        eq2_key = state.introduce_expression("Derivative(h2(t), t) + h2(t)")
+        result = state.dsolve_system([eq1_key, eq2_key], ["h1", "g"])
+        assert "error" in result.lower()
+
+
 class TestPdsolvePdeTool:
     def test_simple_pde(self):
         state = SymPyState()
