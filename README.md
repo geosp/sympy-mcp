@@ -298,14 +298,22 @@ Here's an example of how the tool-calling works in a conversation with an AI ass
 
 $$ m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + kx = F(t) $$
 
+**Assistant**: (Internal tool call) `create_session` to start a session:
+```json
+{
+  "description": "damped harmonic oscillator"
+}
+```
+
 **Assistant**: (Internal tool call) `intro_many` to introduce variables:
 ```json
 {
+  "session_id": "<session_id>",
   "variables": [
-    {"var_name": "t", "pos_assumptions": ["real"], "neg_assumptions": []},
-    {"var_name": "m", "pos_assumptions": ["real", "positive"], "neg_assumptions": []},
-    {"var_name": "c", "pos_assumptions": ["real", "positive"], "neg_assumptions": []},
-    {"var_name": "k", "pos_assumptions": ["real", "positive"], "neg_assumptions": []}
+    {"var_name": "t", "assumptions": ["real"], "negative_assumptions": []},
+    {"var_name": "m", "assumptions": ["real", "positive"], "negative_assumptions": []},
+    {"var_name": "c", "assumptions": ["real", "positive"], "negative_assumptions": []},
+    {"var_name": "k", "assumptions": ["real", "positive"], "negative_assumptions": []}
   ]
 }
 ```
@@ -313,6 +321,7 @@ $$ m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + kx = F(t) $$
 **Assistant**: (Internal tool call) `introduce_function` to define x(t):
 ```json
 {
+  "session_id": "<session_id>",
   "func_name": "x"
 }
 ```
@@ -320,6 +329,7 @@ $$ m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + kx = F(t) $$
 **Assistant**: (Internal tool call) `introduce_expression` to create the differential equation:
 ```json
 {
+  "session_id": "<session_id>",
   "expression": "Eq(m*Derivative(x(t), t, t) + c*Derivative(x(t), t) + k*x(t), F(t))"
 }
 ```
@@ -327,6 +337,7 @@ $$ m\frac{d^2x}{dt^2} + c\frac{dx}{dt} + kx = F(t) $$
 **Assistant**: (Internal tool call) `print_latex_expression` to display the equation nicely:
 ```json
 {
+  "session_id": "<session_id>",
   "expr_key": "expr_12"
 }
 ```
@@ -340,6 +351,7 @@ $$
 **Assistant**: (Internal tool call) `introduce_function` to define F(t):
 ```json
 {
+  "session_id": "<session_id>",
   "func_name": "F"
 }
 ```
@@ -347,6 +359,7 @@ $$
 **Assistant**: (Internal tool call) `dsolve_ode` to solve the differential equation:
 ```json
 {
+  "session_id": "<session_id>",
   "expr_key": "expr_12",
   "func_name": "x"
 }
@@ -362,9 +375,17 @@ $$
 
 **User**: Compute the trace of the Ricci tensor $R_{\mu\nu}$ using the inverse metric $g^{\mu\nu}$ for Anti-de Sitter spacetime to determine its constant scalar curvature $R$.
 
+**Assistant**: (Internal tool call) `create_session` to start a session:
+```json
+{
+  "description": "Anti-de Sitter Ricci scalar"
+}
+```
+
 **Assistant**: (Internal tool call) `create_predefined_metric` to create the Anti-de Sitter metric:
 ```json
 {
+  "session_id": "<session_id>",
   "metric_name": "AntiDeSitter"
 }
 ```
@@ -372,15 +393,17 @@ $$
 **Assistant**: (Internal tool call) `calculate_tensor` to calculate the Ricci tensor:
 ```json
 {
+  "session_id": "<session_id>",
   "metric_key": "metric_AntiDeSitter",
   "tensor_type": "RICCI_TENSOR",
-  "simplify_result": true
+  "simplify": true
 }
 ```
 
 **Assistant**: (Internal tool call) `print_latex_tensor` to display the Ricci tensor:
 ```json
 {
+  "session_id": "<session_id>",
   "tensor_key": "riccitensor_metric_AntiDeSitter"
 }
 ```
@@ -394,15 +417,17 @@ $$
 **Assistant**: (Internal tool call) `calculate_tensor` to calculate the Ricci scalar:
 ```json
 {
+  "session_id": "<session_id>",
   "metric_key": "metric_AntiDeSitter",
   "tensor_type": "RICCI_SCALAR",
-  "simplify_result": true
+  "simplify": true
 }
 ```
 
 **Assistant**: (Internal tool call) `print_latex_tensor` to display the Ricci scalar:
 ```json
 {
+  "session_id": "<session_id>",
   "tensor_key": "ricciscalar_metric_AntiDeSitter"
 }
 ```
