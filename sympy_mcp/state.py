@@ -12,6 +12,7 @@ import sympy
 from sympy import Eq, Function, dsolve, diff, integrate, simplify, Matrix
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.core.facts import InconsistentAssumptions
+from sympy.core.function import AppliedUndef
 from sympy.solvers.pde import pdsolve
 from sympy.vector import CoordSys3D, curl, divergence, gradient
 from sympy.physics.units import convert_to
@@ -27,7 +28,7 @@ from sympy.physics.units import (
 
 from sympy_mcp.parsing import parse_expression
 from sympy_mcp.results import StoredResult
-from sympy_mcp import verification
+from sympy_mcp import odes, verification
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
 )
@@ -569,7 +570,11 @@ class SymPyState:
         return func_name
 
     def dsolve_ode(
-        self, expr_key: str, func_name: str, hint: Optional[ODEHint] = None
+        self,
+        expr_key: str,
+        func_name: str,
+        hint: Optional[ODEHint] = None,
+        ics: Optional[Dict[str, str]] = None,
     ) -> str:
         hint = self._coerce_ode_hint(hint)
         if expr_key not in self.expressions:
@@ -581,8 +586,15 @@ class SymPyState:
 
         try:
             eq = expression if isinstance(expression, sympy.Eq) else sympy.Eq(expression, 0)
-            solution = dsolve(eq, hint=hint.value) if hint is not None else dsolve(eq)
-            return self._result(self._store(solution), legacy=sympy.latex(solution))
+            kwargs: Dict[str, Any] = {}
+            if hint is not None:
+                kwargs["hint"] = hint.value
+            if ics:
+                kwargs["ics"] = odes.parse_ics(ics, [eq], self._parse)
+            solution = dsolve(eq, **kwargs)
+            key = self._store(solution)
+            extras = odes.rhs_extras(solution, self._store)
+            return self._result(key, legacy=sympy.latex(solution), **extras)
         except ValueError as e:
             return f"Error: {e}. This might be due to an invalid hint or unsupported equation type."
         except NotImplementedError as e:
@@ -590,7 +602,12 @@ class SymPyState:
         except Exception as e:
             return f"An unexpected error occurred: {e}"
 
-    def dsolve_system(self, expr_keys: List[str], func_names: List[str]) -> str:
+    def dsolve_system(
+        self,
+        expr_keys: List[str],
+        func_names: List[str],
+        ics: Optional[Dict[str, str]] = None,
+    ) -> str:
         for expr_key in expr_keys:
             if expr_key not in self.expressions:
                 return f"Error: Expression with key '{expr_key}' not found."
@@ -604,16 +621,78 @@ class SymPyState:
             equations.append(expr if isinstance(expr, sympy.Eq) else sympy.Eq(expr, 0))
 
         try:
-            solution = dsolve(equations)
+            if ics:
+                solution = dsolve(equations, ics=odes.parse_ics(ics, equations, self._parse))
+            else:
+                solution = dsolve(equations)
             if isinstance(solution, list):
                 legacy = ", ".join(sympy.latex(s) for s in solution)
             else:
                 legacy = sympy.latex(solution)
-            return self._result(self._store(solution), legacy=legacy)
+            key = self._store(solution)
+            extras = odes.system_rhs_extras(solution, self._store)
+            return self._result(key, legacy=legacy, **extras)
         except NotImplementedError as e:
             return f"Error: Method not implemented: {e}."
         except Exception as e:
             return f"An unexpected error occurred: {e}"
+
+    def verify_ode_solution(
+        self,
+        solution_key: str,
+        expr_key: Optional[str] = None,
+        expr_keys: Optional[List[str]] = None,
+        func_name: Optional[str] = None,
+    ) -> str:
+        """Check a solution against an ODE (expr_key) or a system (expr_keys) with checkodesol."""
+        import json
+        if (expr_key is None) == (expr_keys is None):
+            return "Error: Pass exactly one of expr_key (one ODE) or expr_keys (a system)."
+        keys = [expr_key] if expr_key is not None else list(expr_keys)
+        for key in keys:
+            if key not in self.expressions:
+                return f"Error: Expression with key '{key}' not found."
+        equations = [
+            e if isinstance(e, sympy.Eq) else sympy.Eq(e, 0)
+            for e in (self.expressions[key] for key in keys)
+        ]
+        try:
+            solution = self._resolve_operand(solution_key)
+        except KeyError as e:
+            return f"Error: {e.args[0]}"
+        except Exception as e:
+            return f"Error parsing solution: {e}"
+
+        # A bare right-hand side needs the function to build f(x) = rhs
+        if not isinstance(solution, (sympy.Eq, list)):
+            if func_name is None:
+                return "Error: The solution is not an equation; pass func_name so it can be read as f(x) = solution."
+            applications = sorted(
+                {a for eq in equations for a in eq.atoms(AppliedUndef) if a.func.__name__ == func_name},
+                key=str,
+            )
+            if not applications:
+                return f"Error: Function '{func_name}' does not appear in the ODE."
+            solution = sympy.Eq(applications[0], solution)
+
+        try:
+            if expr_keys is not None:
+                ok, residuals = sympy.checkodesol(equations, solution)
+                return json.dumps({"verified": bool(ok), "residuals": [str(r) for r in residuals]})
+            func = None
+            if func_name is not None:
+                func = next(
+                    (a for a in equations[0].atoms(AppliedUndef) if a.func.__name__ == func_name),
+                    None,
+                )
+            checked = sympy.checkodesol(equations[0], solution, func=func)
+            if isinstance(solution, list):
+                branches = [{"verified": bool(ok), "residual": str(r)} for ok, r in checked]
+                return json.dumps({"verified": all(b["verified"] for b in branches), "branches": branches})
+            ok, residual = checked
+            return json.dumps({"verified": bool(ok), "residual": str(residual)})
+        except Exception as e:
+            return f"Error verifying solution: {e}"
 
     def pdsolve_pde(
         self, expr_key: str, func_name: str, hint: Optional[PDEHint] = None

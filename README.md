@@ -81,8 +81,9 @@ Every computing tool stores its result in the session and returns JSON: `{"key":
 | Linear Solver | `solve_linear_system` | Solves a system of linear equations |
 | Nonlinear Solver | `solve_nonlinear_system` | Solves a system of nonlinear equations |
 | Function Variable | `introduce_function` | Introduces a function variable for use in differential equations |
-| ODE Solver | `dsolve_ode` | Solves an ordinary differential equation |
-| Coupled ODE Solver | `dsolve_system` | Solves a coupled system of ordinary differential equations |
+| ODE Solver | `dsolve_ode` | Solves an ordinary differential equation, optionally with initial conditions; stores the solution and its right-hand side |
+| Coupled ODE Solver | `dsolve_system` | Solves a coupled system of ordinary differential equations, optionally with initial conditions |
+| ODE Solution Check | `verify_ode_solution` | Checks that a solution satisfies an ODE or ODE system (`checkodesol`) |
 | PDE Solver | `pdsolve_pde` | Solves a partial differential equation |
 | Matrix Creator | `create_matrix` | Creates a SymPy matrix from the provided data |
 | Determinant | `matrix_determinant` | Calculates the determinant of a matrix |
