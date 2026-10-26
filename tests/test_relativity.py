@@ -191,3 +191,45 @@ class TestPrintLatexTensor:
         result = state.print_latex_tensor("nonexistent_tensor")
         assert "Error" in result
         assert "not found" in result
+
+
+class TestTensorMapping:
+    def test_riemann_is_riemann_not_christoffel(self):
+        import sympy
+        state = SymPyState()
+        metric_key = state.create_predefined_metric(Metric.SCHWARZSCHILD)
+        key = state.calculate_tensor(metric_key, Tensor.RIEMANN_CURVATURE_TENSOR)
+        assert key == f"riemanncurvaturetensor_{metric_key}"
+        riemann = state.expressions[key]
+        assert riemann.rank() == 4
+        r, r_s = sympy.symbols("r r_s")
+        # R^t_{rtr} for Schwarzschild (coords t, r, theta, phi; config ulll)
+        assert sympy.simplify(riemann[0, 1, 0, 1] - r_s / (r**2 * (r - r_s))) == 0
+
+    def test_christoffel_symbols(self):
+        import sympy
+        state = SymPyState()
+        metric_key = state.create_predefined_metric(Metric.SCHWARZSCHILD)
+        key = state.calculate_tensor(metric_key, Tensor.CHRISTOFFEL_SYMBOLS)
+        assert key == f"christoffelsymbols_{metric_key}"
+        gamma = state.expressions[key]
+        assert gamma.rank() == 3
+        r, r_s = sympy.symbols("r r_s")
+        # Gamma^t_{tr} = r_s / (2 r (r - r_s))
+        assert sympy.simplify(gamma[0, 0, 1] - r_s / (2 * r * (r - r_s))) == 0
+
+    def test_christoffel_by_name(self):
+        state = SymPyState()
+        metric_key = state.create_predefined_metric(Metric.SCHWARZSCHILD)
+        assert state.calculate_tensor(metric_key, "ChristoffelSymbols") == (
+            f"christoffelsymbols_{metric_key}"
+        )
+
+    def test_schouten_tensor(self):
+        import sympy
+        state = SymPyState()
+        metric_key = state.create_predefined_metric(Metric.SCHWARZSCHILD)
+        key = state.calculate_tensor(metric_key, Tensor.SCHOUTEN_TENSOR)
+        assert key == f"schoutentensor_{metric_key}"
+        # Schwarzschild is Ricci-flat, so its Schouten tensor vanishes
+        assert all(sympy.simplify(c) == 0 for c in sympy.flatten(state.expressions[key].tolist()))

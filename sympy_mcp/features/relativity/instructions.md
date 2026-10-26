@@ -80,7 +80,7 @@ Search for available metrics by keyword.
 Compute a curvature tensor from a stored metric.
 
 **When to use:**
-- For computing Ricci scalar, Ricci tensor, Riemann tensor, Einstein tensor, Weyl tensor, etc.
+- For computing Christoffel symbols, Ricci scalar, Ricci tensor, Riemann tensor, Schouten tensor, Einstein tensor, Weyl tensor, etc.
 - When the problem involves curvature, geodesics, or field equations in GR
 
 **When NOT to use:**
@@ -99,9 +99,10 @@ Compute a curvature tensor from a stored metric.
 
 | Enum value | Description |
 |---|---|
+| `ChristoffelSymbols` | Christoffel symbols of the second kind, index config `ull` (Γ^a_bc) |
 | `RicciScalar` | Ricci scalar (trace of Ricci tensor) — scalar expression |
 | `RicciTensor` | Ricci curvature tensor |
-| `RiemannCurvatureTensor` | Riemann curvature tensor (via Christoffel symbols) |
+| `RiemannCurvatureTensor` | Riemann curvature tensor, index config `ulll` (R^a_bcd) |
 | `SchoutenTensor` | Schouten tensor |
 | `StressEnergyMomentumTensor` | Stress-energy-momentum tensor |
 | `WeylTensor` | Weyl conformal tensor |

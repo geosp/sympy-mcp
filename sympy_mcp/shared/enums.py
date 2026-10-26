@@ -136,6 +136,7 @@ class Metric(Enum):
 
 
 class Tensor(Enum):
+    CHRISTOFFEL_SYMBOLS = "ChristoffelSymbols"
     RICCI_SCALAR = "RicciScalar"
     RICCI_TENSOR = "RicciTensor"
     RIEMANN_CURVATURE_TENSOR = "RiemannCurvatureTensor"

@@ -33,6 +33,7 @@ try:
     from einsteinpy.symbolic import (
         MetricTensor, RicciTensor, RicciScalar, EinsteinTensor,
         WeylTensor, ChristoffelSymbols, StressEnergyMomentumTensor,
+        RiemannCurvatureTensor, SchoutenTensor,
     )
     from einsteinpy.symbolic.predefined import (
         Schwarzschild, Minkowski, MinkowskiCartesian, KerrNewman, Kerr,
@@ -1022,7 +1023,9 @@ class SymPyState:
             Tensor.RICCI_SCALAR: RicciScalar,
             Tensor.EINSTEIN_TENSOR: EinsteinTensor,
             Tensor.WEYL_TENSOR: WeylTensor,
-            Tensor.RIEMANN_CURVATURE_TENSOR: ChristoffelSymbols,
+            Tensor.RIEMANN_CURVATURE_TENSOR: RiemannCurvatureTensor,
+            Tensor.SCHOUTEN_TENSOR: SchoutenTensor,
+            Tensor.CHRISTOFFEL_SYMBOLS: ChristoffelSymbols,
             Tensor.STRESS_ENERGY_MOMENTUM_TENSOR: StressEnergyMomentumTensor,
         }
 
