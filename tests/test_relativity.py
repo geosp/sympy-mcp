@@ -233,3 +233,31 @@ class TestTensorMapping:
         assert key == f"schoutentensor_{metric_key}"
         # Schwarzschild is Ricci-flat, so its Schouten tensor vanishes
         assert all(sympy.simplify(c) == 0 for c in sympy.flatten(state.expressions[key].tolist()))
+
+
+class TestCalculateTensorSimplify:
+    COMPONENTS = [
+        ["-(1 - 2*M/r)", "0", "0", "0"],
+        ["0", "1/(1 - 2*M/r)", "0", "0"],
+        ["0", "0", "r**2", "0"],
+        ["0", "0", "0", "r**2*sin(theta)**2"],
+    ]
+    COORDS = ["t", "r", "theta", "phi"]
+
+    def _components(self, state, simplify_result):
+        import sympy
+        metric_key = state.create_custom_metric(self.COMPONENTS, self.COORDS)
+        key = state.calculate_tensor(metric_key, Tensor.CHRISTOFFEL_SYMBOLS, simplify_result)
+        return sympy.flatten(state.expressions[key].tolist()), state.tensor_objects[key]
+
+    def test_simplify_applies_to_every_component(self):
+        import sympy
+        components, tensor_obj = self._components(SymPyState(), simplify_result=True)
+        assert all(c == sympy.simplify(c) for c in components)
+        # The stored einsteinpy object holds the simplified array too
+        assert sympy.flatten(tensor_obj.tensor().tolist()) == components
+
+    def test_simplify_false_leaves_components_raw(self):
+        import sympy
+        components, _ = self._components(SymPyState(), simplify_result=False)
+        assert any(c != sympy.simplify(c) for c in components)

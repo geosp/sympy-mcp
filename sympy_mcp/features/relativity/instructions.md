@@ -91,7 +91,7 @@ Compute a curvature tensor from a stored metric.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_key` (str): Session key of a stored metric (a `result_key` from `create_predefined_metric` or `create_custom_metric`).
 - `tensor_type` (str): One of the tensor type enum values (see table below).
-- `simplify` (bool, optional): Whether to simplify the result with `sympy.simplify`. Default: `true`. Set to `false` for large metrics.
+- `simplify` (bool, optional): Whether to apply `sympy.simplify` to every component of the result (or to the scalar, for `RicciScalar`). Default: `true`. Set to `false` for large metrics such as Kerr or Kerr–Newman, where simplifying every component can take a long time.
 
 **Returns:** `result` — string representation of the tensor; `result_key` — session key (e.g. `"ricciscalar_metric_Schwarzschild"`) for use in `print_latex_tensor`.
 

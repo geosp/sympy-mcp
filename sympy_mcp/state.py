@@ -1039,6 +1039,9 @@ class SymPyState:
                 tensor_obj = RicciScalar.from_riccitensor(ricci_tensor)
             else:
                 tensor_obj = tensor_class.from_metric(metric_obj)
+                if simplify_result:
+                    # Element-wise simplify; also replaces the stored einsteinpy array
+                    tensor_obj.simplify(set_self=True)
 
             tensor_key = f"{tensor_enum.value.lower()}_{metric_key}"
             self.tensor_objects[tensor_key] = tensor_obj
