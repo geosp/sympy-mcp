@@ -4,6 +4,7 @@ from typing import List
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
+from sympy_mcp.results import format_output
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -30,13 +31,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         func_name: str,
         hint: str = "default",
+        output_format: str = "structured",
     ) -> str:
         """Solve an ordinary differential equation (ODE)."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.dsolve_ode(expr_key, func_name, hint)
+            return format_output(str(e), output_format)
+        return format_output(state.dsolve_ode(expr_key, func_name, hint), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "dsolve_system"))
@@ -44,13 +46,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         session_id: str,
         expr_keys: List[str],
         func_names: List[str],
+        output_format: str = "structured",
     ) -> str:
         """Solve a coupled system of ordinary differential equations."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.dsolve_system(expr_keys, func_names)
+            return format_output(str(e), output_format)
+        return format_output(state.dsolve_system(expr_keys, func_names), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "pdsolve_pde"))
@@ -59,10 +62,11 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         func_name: str,
         hint: str = "default",
+        output_format: str = "structured",
     ) -> str:
         """Solve a partial differential equation (PDE)."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.pdsolve_pde(expr_key, func_name, hint)
+            return format_output(str(e), output_format)
+        return format_output(state.pdsolve_pde(expr_key, func_name, hint), output_format)

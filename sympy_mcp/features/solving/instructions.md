@@ -1,8 +1,8 @@
 # Solving Tools
 
-Use the same `session_id` across all calls to share state. Symbols must be introduced with `/symbols/intro` and expressions with `/expressions/introduce` before solving. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. Symbols must be introduced with `intro` and expressions with `introduce_expression` before solving. See the session tools (`create_session`, `list_session_state`) for session management.
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -22,17 +22,17 @@ Solve a single equation or expression for one variable.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `expr_key` (str): Session key of the stored expression or equation (a `result_key` from a previous call).
+- `expr_key` (str): Session key of the stored expression or equation (the `key` returned by a previous call).
 - `var_name` (str): Name of the variable to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — solution set as a string (e.g. `"[-1, 1]"`); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the solution set (a SymPy set such as `"{-1, 1}"`, or `ImageSet`/`ConditionSet` for non-finite solutions); `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.
 
 **Example:**
-```json
-POST /solving/algebraic
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "domain": "real"}
-→ {"success": true, "result": "[-1, 1]", "result_key": "expr_1"}
+```
+solve_algebraically(session_id="s1", expr_key="expr_0", var_name="x", domain="real")
+→ {"key": "expr_1", "result": "{-1, 1}", "latex": "\\left\\{-1, 1\\right\\}"}
 ```
 
 ---
@@ -50,17 +50,17 @@ Solve a system of linear equations.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `expr_keys` (list of str): List of session keys for the equations/expressions to solve (each a `result_key` from a previous call).
+- `expr_keys` (list of str): List of session keys for the equations/expressions to solve (each the `key` returned by a previous call).
 - `var_names` (list of str): List of variable names to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — solution as a string (e.g. `"{x: 1, y: 2}"`); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the solution set of tuples, in the order of `var_names` (e.g. `"{(1, 2)}"`); `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.
 
 **Example:**
-```json
-POST /solving/linear_system
-{"session_id": "s1", "expr_keys": ["expr_0", "expr_1"], "var_names": ["x", "y"]}
-→ {"success": true, "result": "{x: 1, y: 2}", "result_key": "expr_2"}
+```
+solve_linear_system(session_id="s1", expr_keys=["expr_0", "expr_1"], var_names=["x", "y"])
+→ {"key": "expr_2", "result": "{(1, 2)}", "latex": "\\left\\{\\left( 1, \\  2\\right)\\right\\}"}
 ```
 
 ---
@@ -81,12 +81,12 @@ Solve a system of nonlinear equations symbolically.
 - `expr_keys` (list of str): List of session keys for the equations/expressions to solve.
 - `var_names` (list of str): List of variable names to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — solution set as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the solution set of tuples, in the order of `var_names`; `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.
 
 **Example:**
-```json
-POST /solving/nonlinear_system
-{"session_id": "s1", "expr_keys": ["expr_0", "expr_1"], "var_names": ["x", "y"]}
-→ {"success": true, "result": "[(-1, 0), (1, 0)]", "result_key": "expr_2"}
+```
+solve_nonlinear_system(session_id="s1", expr_keys=["expr_0", "expr_1"], var_names=["x", "y"])
+→ {"key": "expr_2", "result": "{(-1, 0), (1, 0)}", "latex": "\\left\\{\\left( -1, \\  0\\right), \\left( 1, \\  0\\right)\\right\\}"}
 ```

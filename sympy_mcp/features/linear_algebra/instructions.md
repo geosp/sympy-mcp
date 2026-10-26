@@ -1,10 +1,10 @@
 # Linear Algebra Tools
 
-Use the same `session_id` across all calls to share state. Symbols must be introduced with `/symbols/intro` before they can appear in matrix element strings. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. Symbols must be introduced with `intro` before they can appear in matrix element strings. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `matrix_key` or `expr_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -25,8 +25,9 @@ Creates a symbolic matrix from a 2D list of expression strings.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_data` (list of list of str): 2D list where each string is parsed as a SymPy expression. All rows must have the same length.
 - `name` (str, optional): Custom key name (default: auto-generated `"matrix_N"`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the matrix as a string (e.g. `"Matrix([[1, 2], [3, 4]])"`); `result_key` — session key for chaining (e.g. `"matrix_0"`).
+**Returns:** JSON — `result` — the matrix as a string (e.g. `"Matrix([[1, 2], [3, 4]])"`); `key` — session key for chaining (e.g. `"matrix_0"`); `latex` — the result in LaTeX.
 
 **Notes:**
 - Expression strings can reference session variables (introduced with `intro`).
@@ -34,10 +35,9 @@ Creates a symbolic matrix from a 2D list of expression strings.
 - Symbolic strings like `"x**2 + 1"` work if `x` is in the session.
 
 **Example:**
-```json
-POST /linear_algebra/matrix
-{"session_id": "s1", "matrix_data": [["1", "2"], ["3", "4"]]}
-→ {"success": true, "result": "Matrix([[1, 2], [3, 4]])", "result_key": "matrix_0"}
+```
+create_matrix(session_id="s1", matrix_data=[["1", "2"], ["3", "4"]])
+→ {"key": "matrix_0", "result": "Matrix([[1, 2], [3, 4]])", "latex": "\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]"}
 ```
 
 ---
@@ -56,15 +56,15 @@ Calculates the determinant of a square matrix.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `matrix_key` (str): Session key of an existing matrix (a `result_key` from `create_matrix`).
+- `matrix_key` (str): Session key of an existing matrix (the `key` returned by `create_matrix`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the determinant as a string (e.g. `"-2"`); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the determinant as a string (e.g. `"-2"`); `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /linear_algebra/determinant
-{"session_id": "s1", "matrix_key": "matrix_0"}
-→ {"success": true, "result": "-2", "result_key": "expr_0"}
+```
+matrix_determinant(session_id="s1", matrix_key="matrix_0")
+→ {"key": "expr_0", "result": "-2", "latex": "-2"}
 ```
 
 ---
@@ -84,14 +84,14 @@ Calculates the inverse of a square matrix. Fails if the matrix is singular.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the inverse matrix as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the inverse matrix as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /linear_algebra/inverse
-{"session_id": "s1", "matrix_key": "matrix_0"}
-→ {"success": true, "result": "Matrix([[-2, 1], [3/2, -1/2]])", "result_key": "matrix_1"}
+```
+matrix_inverse(session_id="s1", matrix_key="matrix_0")
+→ {"key": "matrix_1", "result": "Matrix([[-2, 1], [3/2, -1/2]])", "latex": "\\left[\\begin{matrix}-2 & 1\\\\\\frac{3}{2} & - \\frac{1}{2}\\end{matrix}\\right]"}
 ```
 
 ---
@@ -111,14 +111,14 @@ Calculates the eigenvalues of a square matrix with their algebraic multiplicitie
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — eigenvalue dictionary as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — eigenvalue dictionary as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /linear_algebra/eigenvalues
-{"session_id": "s1", "matrix_key": "matrix_0"}
-→ {"success": true, "result": "{-1: 1, 2: 1}", "result_key": "expr_0"}
+```
+matrix_eigenvalues(session_id="s1", matrix_key="matrix_0")
+→ {"key": "expr_0", "result": "{3: 1, -1: 1}", "latex": "\\left\\{ -1 : 1, \\  3 : 1\\right\\}"}
 ```
 
 ---
@@ -137,12 +137,12 @@ Calculates the eigenvectors of a square matrix.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — list of `(eigenvalue, multiplicity, [eigenvectors])` tuples as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — list of `(eigenvalue, multiplicity, [eigenvectors])` tuples as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /linear_algebra/eigenvectors
-{"session_id": "s1", "matrix_key": "matrix_0"}
-→ {"success": true, "result": "[(-1, 1, [Matrix([[-1], [1]])]), (2, 1, [Matrix([[2], [3]])])]", "result_key": "expr_0"}
+```
+matrix_eigenvectors(session_id="s1", matrix_key="matrix_0")
+→ {"key": "expr_0", "result": "[(-1, 1, [Matrix([[-1], [1]])]), (3, 1, [Matrix([[1], [1]])])]", "latex": "..."}
 ```

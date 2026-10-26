@@ -1,10 +1,10 @@
 # Vector Calculus Tools
 
-Use the same `session_id` across all calls to share state. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `vector_field_key` or `scalar_field_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -26,13 +26,12 @@ Creates a 3D Cartesian coordinate system. After creation, the basis vectors are 
 - `coord_sys_name` (str): Name for the coordinate system (e.g., `"R"`).
 - `coord_names` (list of str, optional): Exactly 3 names for the coordinate axes (e.g., `["x", "y", "z"]`). Defaults to `x`, `y`, `z`.
 
-**Returns:** `result` — the coordinate system name (e.g. `"R"`); `result_key` — session key (same as name) for use in `create_vector_field`.
+**Returns:** The coordinate system name as plain text (e.g. `"R"`). It is also its session key: pass it as `coord_sys_name`, or reference it as `@R` in expression strings.
 
 **Example:**
-```json
-POST /vector/coordinate_system
-{"session_id": "s1", "coord_sys_name": "R"}
-→ {"success": true, "result": "R", "result_key": "R"}
+```
+create_coordinate_system(session_id="s1", coord_sys_name="R")
+→ "R"
 ```
 
 ---
@@ -55,17 +54,17 @@ Creates a vector field in a previously created coordinate system.
 - `comp_x` (str): Expression string for the x-component.
 - `comp_y` (str): Expression string for the y-component.
 - `comp_z` (str): Expression string for the z-component.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the vector field as a string; `result_key` — session key for chaining (e.g. `"vector_0"`).
+**Returns:** JSON — `result` — the vector field as a string; `key` — session key for chaining (e.g. `"vector_0"`); `latex` — the result in LaTeX.
 
 **Notes:**
 - Component expressions can reference session variables and coordinate scalars (e.g. `"R.x"`, `"R.y"`).
 
 **Example:**
-```json
-POST /vector/field
-{"session_id": "s1", "coord_sys_name": "R", "comp_x": "R.x", "comp_y": "R.y", "comp_z": "0"}
-→ {"success": true, "result": "R.x*R.i + R.y*R.j", "result_key": "vector_0"}
+```
+create_vector_field(session_id="s1", coord_sys_name="R", comp_x="R.x", comp_y="R.y", comp_z="0")
+→ {"key": "vector_0", "result": "R.x*R.i + R.y*R.j", "latex": "\\left(\\mathbf{{x}_{R}}\\right)\\mathbf{\\hat{i}_{R}} + \\left(\\mathbf{{y}_{R}}\\right)\\mathbf{\\hat{j}_{R}}"}
 ```
 
 ---
@@ -84,15 +83,15 @@ Calculates the curl of a vector field.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `vector_field_key` (str): Session key of an existing vector field (a `result_key` from `create_vector_field`).
+- `vector_field_key` (str): Session key of an existing vector field (the `key` returned by `create_vector_field`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the curl as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the curl as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /vector/curl
-{"session_id": "s1", "vector_field_key": "vector_0"}
-→ {"success": true, "result": "0", "result_key": "vector_1"}
+```
+calculate_curl(session_id="s1", vector_field_key="vector_0")
+→ {"key": "vector_1", "result": "0", "latex": "\\mathbf{\\hat{0}}"}
 ```
 
 ---
@@ -112,14 +111,14 @@ Calculates the divergence of a vector field, producing a scalar expression.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `vector_field_key` (str): Session key of an existing vector field.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the divergence as a string (scalar); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the divergence as a string (scalar); `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /vector/divergence
-{"session_id": "s1", "vector_field_key": "vector_0"}
-→ {"success": true, "result": "2", "result_key": "expr_0"}
+```
+calculate_divergence(session_id="s1", vector_field_key="vector_0")
+→ {"key": "expr_0", "result": "2", "latex": "2"}
 ```
 
 ---
@@ -138,16 +137,16 @@ Calculates the gradient of a scalar field, producing a vector field.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `scalar_field_key` (str): Session key of an existing scalar expression (a `result_key` from a previous call).
+- `scalar_field_key` (str): Session key of an existing scalar expression (the `key` returned by a previous call).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the gradient as a string (vector); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the gradient as a string (vector); `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Notes:**
 - The scalar field must be defined within a coordinate system context for the gradient to be computed correctly.
 
 **Example:**
-```json
-POST /vector/gradient
-{"session_id": "s1", "scalar_field_key": "expr_0"}
-→ {"success": true, "result": "R.i + R.j", "result_key": "vector_1"}
+```
+calculate_gradient(session_id="s1", scalar_field_key="expr_0")
+→ {"key": "vector_1", "result": "R.i + R.j", "latex": "\\mathbf{\\hat{i}_{R}} + \\mathbf{\\hat{j}_{R}}"}
 ```

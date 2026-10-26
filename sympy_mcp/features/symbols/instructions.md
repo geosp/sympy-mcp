@@ -1,6 +1,6 @@
 # Symbol Introduction Tools
 
-Use the same `session_id` across all calls to share state. See `POST /session/reset` docs for full session management guide.
+Use the same `session_id` across all calls to share state. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -23,13 +23,12 @@ Introduces a single symbolic variable into the session. The variable is then ava
 - `assumptions` (list): Assumptions that hold true (e.g., `["real", "positive"]`). Default: `[]`
 - `negative_assumptions` (list): Assumptions that are explicitly false (e.g., `["complex"]`). Default: `[]`
 
-**Returns:** `result` — the variable name confirming creation (e.g. `"x"`). No `result_key` (symbols are referenced by name, not by key).
+**Returns:** The variable name as plain text (e.g. `"x"`). Symbols are referenced by name in expression strings, not by key.
 
 **Example:**
-```json
-POST /symbols/intro
-{"session_id": "s1", "var_name": "x", "assumptions": ["real"]}
-→ {"success": true, "result": "x"}
+```
+intro(session_id="s1", var_name="x", assumptions=["real"])
+→ "x"
 ```
 
 ---
@@ -51,11 +50,10 @@ Introduces multiple symbolic variables in a single call.
   - A string: `"x"` → creates x with no assumptions
   - A list: `["x", ["real"], []]` → creates x with real assumption, no negative assumptions
 
-**Returns:** `result` — confirmation string listing all created symbols.
+**Returns:** Plain text listing all created symbols.
 
 **Example:**
-```json
-POST /symbols/intro_many
-{"session_id": "s1", "variables": ["x", "y", ["z", ["positive"], []]]}
-→ {"success": true, "result": "{'x': x, 'y': y, 'z': z}"}
+```
+intro_many(session_id="s1", variables=["x", "y", ["z", ["positive"], []]])
+→ "{'x': x, 'y': y, 'z': z}"
 ```

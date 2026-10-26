@@ -26,6 +26,7 @@ from sympy.physics.units import (
 )
 
 from sympy_mcp.parsing import parse_expression
+from sympy_mcp.results import StoredResult
 from sympy_mcp import verification
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
@@ -90,6 +91,15 @@ class SymPyState:
         if key in self.coordinate_systems:
             return str(self.coordinate_systems[key])
         return key  # already a direct string (error message, LaTeX result, etc.)
+
+    def _result(self, key: str, legacy: Optional[str] = None, **extras: Any) -> StoredResult:
+        """The return value for a stored result: the legacy string (default: the key) plus payload data."""
+        return StoredResult(key if legacy is None else legacy, key, self.expressions[key], **extras)
+
+    def _store(self, value: Any) -> str:
+        key = self._next_expr_key()
+        self.expressions[key] = value
+        return key
 
     def _parse_dict(self) -> Dict[str, Any]:
         return {**self.local_vars, **self.functions}
@@ -275,7 +285,7 @@ class SymPyState:
             expr_key = expr_var_name
         self.expressions[expr_key] = parsed_expr
         self.expression_counter += 1
-        return expr_key
+        return self._result(expr_key)
 
     def introduce_equation(self, lhs_expression: str, rhs_expression: str) -> str:
         lhs_expr = self._parse(lhs_expression)
@@ -283,7 +293,7 @@ class SymPyState:
         eq_key = f"eq_{self.expression_counter}"
         self.expressions[eq_key] = Eq(lhs_expr, rhs_expr)
         self.expression_counter += 1
-        return eq_key
+        return self._result(eq_key)
 
     def print_latex_expression(self, expr_key: str) -> str:
         if expr_key not in self.expressions:
@@ -366,7 +376,7 @@ class SymPyState:
             result = expr.subs(var, replacement)
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during substitution: {e}"
 
@@ -377,7 +387,7 @@ class SymPyState:
             result = sympy.factor(self.expressions[expr_key])
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error factoring expression: {e}"
 
@@ -388,7 +398,7 @@ class SymPyState:
             result = sympy.expand(self.expressions[expr_key])
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error expanding expression: {e}"
 
@@ -401,7 +411,7 @@ class SymPyState:
             result = sympy.collect(self.expressions[expr_key], self.local_vars[var_name])
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error collecting expression: {e}"
 
@@ -414,7 +424,7 @@ class SymPyState:
             result = sympy.apart(self.expressions[expr_key], self.local_vars[var_name])
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error computing partial fractions: {e}"
 
@@ -425,7 +435,7 @@ class SymPyState:
             result = self.expressions[expr_key].evalf(n)
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error evaluating expression numerically: {e}"
 
@@ -479,7 +489,7 @@ class SymPyState:
             solution_set = sympy.solveset(
                 expression_to_solve, variable_symbol, domain=domain_map[domain]
             )
-            return sympy.latex(solution_set)
+            return self._result(self._store(solution_set), legacy=sympy.latex(solution_set))
         except NotImplementedError as e:
             return f"Error: SymPy could not solve the equation: {e}."
         except Exception as e:
@@ -508,7 +518,7 @@ class SymPyState:
 
         try:
             solution_set = sympy.linsolve(system, symbols)
-            return sympy.latex(solution_set)
+            return self._result(self._store(solution_set), legacy=sympy.latex(solution_set))
         except NotImplementedError as e:
             return f"Error: SymPy could not solve the linear system: {e}."
         except ValueError as e:
@@ -539,7 +549,7 @@ class SymPyState:
 
         try:
             solution_set = sympy.nonlinsolve(system, symbols)
-            return sympy.latex(solution_set)
+            return self._result(self._store(solution_set), legacy=sympy.latex(solution_set))
         except NotImplementedError as e:
             return f"Error: SymPy could not solve the nonlinear system: {e}."
         except ValueError as e:
@@ -570,7 +580,7 @@ class SymPyState:
         try:
             eq = expression if isinstance(expression, sympy.Eq) else sympy.Eq(expression, 0)
             solution = dsolve(eq, hint=hint.value) if hint is not None else dsolve(eq)
-            return sympy.latex(solution)
+            return self._result(self._store(solution), legacy=sympy.latex(solution))
         except ValueError as e:
             return f"Error: {e}. This might be due to an invalid hint or unsupported equation type."
         except NotImplementedError as e:
@@ -594,8 +604,10 @@ class SymPyState:
         try:
             solution = dsolve(equations)
             if isinstance(solution, list):
-                return ", ".join(sympy.latex(s) for s in solution)
-            return sympy.latex(solution)
+                legacy = ", ".join(sympy.latex(s) for s in solution)
+            else:
+                legacy = sympy.latex(solution)
+            return self._result(self._store(solution), legacy=legacy)
         except NotImplementedError as e:
             return f"Error: Method not implemented: {e}."
         except Exception as e:
@@ -615,7 +627,7 @@ class SymPyState:
         try:
             eq = expression if isinstance(expression, sympy.Eq) else sympy.Eq(expression, 0)
             solution = pdsolve(eq, hint=hint.value) if hint is not None else pdsolve(eq)
-            return sympy.latex(solution)
+            return self._result(self._store(solution), legacy=sympy.latex(solution))
         except ValueError as e:
             return f"Error: {e}. This might be due to an unsupported equation type."
         except NotImplementedError as e:
@@ -634,7 +646,7 @@ class SymPyState:
             simplified_expr = simplify(self.expressions[expr_key])
             result_key = self._next_expr_key()
             self.expressions[result_key] = simplified_expr
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during simplification: {e}"
 
@@ -662,7 +674,7 @@ class SymPyState:
             result = integrate(expr, bounds) if bounds else integrate(expr, var)
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during integration: {e}"
 
@@ -680,7 +692,7 @@ class SymPyState:
             result = diff(self.expressions[expr_key], self.local_vars[var_name], order)
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during differentiation: {e}"
 
@@ -694,7 +706,7 @@ class SymPyState:
             result = sympy.limit(self.expressions[expr_key], self.local_vars[var_name], point_expr, dir=direction)
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error computing limit: {e}"
 
@@ -707,9 +719,13 @@ class SymPyState:
             point_expr = self._parse(point)
             full_series = self.expressions[expr_key].series(self.local_vars[var_name], point_expr, order)
             stored = full_series.removeO()
-            key = self._next_expr_key()
-            self.expressions[key] = stored
-            return f"{key}|||{str(full_series)}"
+            key = self._store(stored)
+            return self._result(
+                key,
+                legacy=f"{key}|||{str(full_series)}",
+                series=str(full_series),
+                series_latex=sympy.latex(full_series),
+            )
         except Exception as e:
             return f"Error computing series expansion: {e}"
 
@@ -725,7 +741,7 @@ class SymPyState:
             result = sympy.summation(self.expressions[expr_key], (var, lower_expr, upper_expr))
             key = self._next_expr_key()
             self.expressions[key] = result
-            return key
+            return self._result(key)
         except Exception as e:
             return f"Error computing summation: {e}"
 
@@ -781,7 +797,7 @@ class SymPyState:
             )
             result_key = self._next_vector_key()
             self.expressions[result_key] = vector_field
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error creating vector field: {e}"
 
@@ -792,7 +808,7 @@ class SymPyState:
             curl_result = curl(self.expressions[vector_field_key])
             result_key = self._next_vector_key()
             self.expressions[result_key] = curl_result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating curl: {e}"
 
@@ -803,7 +819,7 @@ class SymPyState:
             div_result = divergence(self.expressions[vector_field_key])
             result_key = self._next_expr_key()
             self.expressions[result_key] = div_result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating divergence: {e}"
 
@@ -814,7 +830,7 @@ class SymPyState:
             grad_result = gradient(self.expressions[scalar_field_key])
             result_key = self._next_vector_key()
             self.expressions[result_key] = grad_result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating gradient: {e}"
 
@@ -858,7 +874,7 @@ class SymPyState:
             result = convert_to(expr, target_unit_objs, system)
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during unit conversion: {e}"
 
@@ -872,7 +888,7 @@ class SymPyState:
             result = self.expressions[expr_key].simplify()
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error during quantity simplification: {e}"
 
@@ -902,7 +918,7 @@ class SymPyState:
             else:
                 matrix_key = matrix_var_name
             self.expressions[matrix_key] = matrix
-            return matrix_key
+            return self._result(matrix_key)
         except Exception as e:
             return f"Error creating matrix: {e}"
 
@@ -916,7 +932,7 @@ class SymPyState:
             det = matrix.det()
             result_key = self._next_expr_key()
             self.expressions[result_key] = det
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating determinant: {e}"
 
@@ -930,7 +946,7 @@ class SymPyState:
             inv = matrix.inv()
             result_key = self._next_matrix_key()
             self.expressions[result_key] = inv
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating inverse: {e}"
 
@@ -944,7 +960,7 @@ class SymPyState:
             eigenvals = matrix.eigenvals()
             result_key = self._next_expr_key()
             self.expressions[result_key] = eigenvals
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating eigenvalues: {e}"
 
@@ -958,7 +974,7 @@ class SymPyState:
             eigenvects = matrix.eigenvects()
             result_key = self._next_expr_key()
             self.expressions[result_key] = eigenvects
-            return result_key
+            return self._result(result_key)
         except Exception as e:
             return f"Error calculating eigenvectors: {e}"
 
@@ -1001,7 +1017,7 @@ class SymPyState:
             metric_key = f"metric_{metric_enum.value}"
             self.metrics[metric_key] = metric_obj
             self.expressions[metric_key] = metric_obj.tensor()
-            return metric_key
+            return self._result(metric_key)
         except Exception as e:
             return f"Error creating metric: {e}"
 
@@ -1085,7 +1101,7 @@ class SymPyState:
             else:
                 self.expressions[tensor_key] = tensor_obj.tensor()
 
-            return tensor_key
+            return self._result(tensor_key)
         except Exception as e:
             return f"Error calculating tensor: {e}"
 
@@ -1120,7 +1136,7 @@ class SymPyState:
             self.metrics[metric_key] = metric_obj
             self.expressions[metric_key] = metric_obj.tensor()
             self.expression_counter += 1
-            return metric_key
+            return self._result(metric_key)
         except Exception as e:
             return f"Error creating custom metric: {e}"
 

@@ -4,6 +4,7 @@ from typing import Optional, List
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
+from sympy_mcp.results import format_output
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -32,40 +33,41 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         comp_x: str,
         comp_y: str,
         comp_z: str,
+        output_format: str = "structured",
     ) -> str:
         """Create a vector field in a coordinate system."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.create_vector_field(coord_sys_name, comp_x, comp_y, comp_z)
+            return format_output(str(e), output_format)
+        return format_output(state.create_vector_field(coord_sys_name, comp_x, comp_y, comp_z), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "calculate_curl"))
-    async def calculate_curl(session_id: str, vector_field_key: str) -> str:
+    async def calculate_curl(session_id: str, vector_field_key: str, output_format: str = "structured") -> str:
         """Calculate the curl of a vector field."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.calculate_curl(vector_field_key)
+            return format_output(str(e), output_format)
+        return format_output(state.calculate_curl(vector_field_key), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "calculate_divergence"))
-    async def calculate_divergence(session_id: str, vector_field_key: str) -> str:
+    async def calculate_divergence(session_id: str, vector_field_key: str, output_format: str = "structured") -> str:
         """Calculate the divergence of a vector field."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.calculate_divergence(vector_field_key)
+            return format_output(str(e), output_format)
+        return format_output(state.calculate_divergence(vector_field_key), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "calculate_gradient"))
-    async def calculate_gradient(session_id: str, scalar_field_key: str) -> str:
+    async def calculate_gradient(session_id: str, scalar_field_key: str, output_format: str = "structured") -> str:
         """Calculate the gradient of a scalar field."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.calculate_gradient(scalar_field_key)
+            return format_output(str(e), output_format)
+        return format_output(state.calculate_gradient(scalar_field_key), output_format)

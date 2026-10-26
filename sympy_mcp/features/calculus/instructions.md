@@ -1,10 +1,10 @@
 # Calculus Tools
 
-Use the same `session_id` across all calls to share state. Symbols must be introduced with `/symbols/intro` before they can appear in expression strings. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. Symbols must be introduced with `intro` before they can appear in expression strings. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -24,15 +24,15 @@ Simplifies a symbolic expression using SymPy's `simplify` function.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `expr_key` (str): Session key from a previous call's `result_key` field.
+- `expr_key` (str): Session key from a previous call's `key` field.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the simplified expression as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the simplified expression as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /calculus/simplify
-{"session_id": "s1", "expr_key": "expr_0"}
-→ {"success": true, "result": "x**2 + 2*x + 1", "result_key": "expr_1"}
+```
+simplify_expression(session_id="s1", expr_key="expr_0")
+→ {"key": "expr_1", "result": "x**2 + 2*x + 1", "latex": "x^{2} + 2 x + 1"}
 ```
 
 ---
@@ -55,8 +55,9 @@ Integrates an expression with respect to a variable. Supports indefinite and def
 - `var_name` (str): Variable to integrate with respect to (must be introduced in the session).
 - `lower_bound` (str, optional): Lower bound for definite integration (e.g., `"0"`, `"pi"`).
 - `upper_bound` (str, optional): Upper bound for definite integration (e.g., `"1"`, `"oo"`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the integral as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the integral as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Notes:**
 - If both `lower_bound` and `upper_bound` are provided, performs definite integration.
@@ -64,17 +65,15 @@ Integrates an expression with respect to a variable. Supports indefinite and def
 - Bounds are parsed as SymPy expressions: use `"pi"`, `"oo"` (infinity), etc.
 
 **Example (indefinite):**
-```json
-POST /calculus/integrate
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x"}
-→ {"success": true, "result": "x**3/3", "result_key": "expr_1"}
+```
+integrate_expression(session_id="s1", expr_key="expr_0", var_name="x")
+→ {"key": "expr_1", "result": "x**3/3", "latex": "\\frac{x^{3}}{3}"}
 ```
 
 **Example (definite):**
-```json
-POST /calculus/integrate
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "lower_bound": "0", "upper_bound": "1"}
-→ {"success": true, "result": "1/3", "result_key": "expr_1"}
+```
+integrate_expression(session_id="s1", expr_key="expr_0", var_name="x", lower_bound="0", upper_bound="1")
+→ {"key": "expr_1", "result": "1/3", "latex": "\\frac{1}{3}"}
 ```
 
 ---
@@ -95,14 +94,14 @@ Differentiates an expression with respect to a variable, optionally to a specifi
 - `expr_key` (str): Session key of the expression to differentiate.
 - `var_name` (str): Variable to differentiate with respect to (must be introduced in the session).
 - `order` (int, optional): Order of differentiation. Default: `1`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the derivative as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the derivative as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /calculus/differentiate
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "order": 2}
-→ {"success": true, "result": "2", "result_key": "expr_1"}
+```
+differentiate_expression(session_id="s1", expr_key="expr_0", var_name="x", order=2)
+→ {"key": "expr_1", "result": "2", "latex": "2"}
 ```
 
 ---
@@ -126,14 +125,14 @@ Compute the limit of an expression as a variable approaches a point.
 - `var_name` (str): Variable approaching the limit point (must be introduced in the session).
 - `point` (str): The limit point as a SymPy expression string (e.g. `"0"`, `"oo"`, `"pi/2"`).
 - `direction` (str, optional): `"+"` for right-hand limit, `"-"` for left-hand limit. Default: `"+"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the limit value; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the limit value; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /calculus/limit
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "point": "0"}
-→ {"success": true, "result": "1", "result_key": "expr_1"}
+```
+limit_expression(session_id="s1", expr_key="expr_0", var_name="x", point="0")
+→ {"key": "expr_1", "result": "1", "latex": "1"}
 ```
 (For `sin(x)/x` as `x → 0`)
 
@@ -158,16 +157,19 @@ Compute the Taylor/Maclaurin series expansion of an expression around a point.
 - `var_name` (str): Variable to expand in (must be introduced in the session).
 - `point` (str, optional): Expansion point. Default: `"0"` (Maclaurin series).
 - `order` (int, optional): Number of terms (truncation order). Default: `6`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:**
-- `result` — the full series including the big-O remainder term (e.g. `"x - x**3/6 + O(x**5)"`) — useful for display
-- `result_key` — session key storing the polynomial without the big-O term, for use in further calculations
+**Returns:** JSON with
+- `key` — session key storing the polynomial **without** the big-O term, for use in further calculations
+- `result` / `latex` — that stored polynomial (e.g. `"-x**3/6 + x"`)
+- `series` / `series_latex` — the full series **including** the big-O remainder (e.g. `"x - x**3/6 + O(x**5)"`), for display
+
+With `output_format="legacy"`: `"<full series> [stored as <key>]"`.
 
 **Example:**
-```json
-POST /calculus/series
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "point": "0", "order": 5}
-→ {"success": true, "result": "x - x**3/6 + O(x**5)", "result_key": "expr_1"}
+```
+series_expansion(session_id="s1", expr_key="expr_0", var_name="x", point="0", order=5)
+→ {"key": "expr_1", "result": "-x**3/6 + x", "latex": "- \\frac{x^{3}}{6} + x", "series": "x - x**3/6 + O(x**5)", "series_latex": "x - \\frac{x^{3}}{6} + O\\left(x^{5}\\right)"}
 ```
 
 ---
@@ -191,16 +193,16 @@ Compute a symbolic or numerical summation over a variable range.
 - `var_name` (str): Summation variable (must be introduced in the session).
 - `lower_bound` (str): Lower bound as a SymPy expression string (e.g. `"1"`, `"0"`).
 - `upper_bound` (str): Upper bound as a SymPy expression string (e.g. `"n"`, `"oo"`, `"10"`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the closed-form sum; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the closed-form sum; `key` — session key for chaining; `latex` — the result in LaTeX.
 
 **Notes:**
 - Use `"oo"` for infinite upper bound (convergent series only).
 - If `upper_bound` is a symbolic variable (e.g. `"n"`), introduce it as a symbol first.
 
 **Example:**
-```json
-POST /calculus/summation
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "k", "lower_bound": "1", "upper_bound": "n"}
-→ {"success": true, "result": "n*(n + 1)/2", "result_key": "expr_1"}
+```
+summation_expression(session_id="s1", expr_key="expr_0", var_name="k", lower_bound="1", upper_bound="n")
+→ {"key": "expr_1", "result": "n*(n + 1)/2", "latex": "\\frac{n \\left(n + 1\\right)}{2}"}
 ```

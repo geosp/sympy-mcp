@@ -4,6 +4,7 @@ from typing import List
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
+from sympy_mcp.results import format_output
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -15,13 +16,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
     async def create_predefined_metric(
         session_id: str,
         metric_name: str,
+        output_format: str = "structured",
     ) -> str:
         """Create a predefined spacetime metric."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.create_predefined_metric(metric_name)
+            return format_output(str(e), output_format)
+        return format_output(state.create_predefined_metric(metric_name), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "search_predefined_metrics"))
@@ -43,13 +45,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         metric_key: str,
         tensor_type: str,
         simplify: bool = True,
+        output_format: str = "structured",
     ) -> str:
         """Calculate a curvature tensor from a stored metric."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.calculate_tensor(metric_key, tensor_type, simplify_result=simplify)
+            return format_output(str(e), output_format)
+        return format_output(state.calculate_tensor(metric_key, tensor_type, simplify_result=simplify), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "create_custom_metric"))
@@ -58,13 +61,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         components: List[List[str]],
         coord_symbols: List[str],
         config: str = "ll",
+        output_format: str = "structured",
     ) -> str:
         """Create a custom metric tensor from a 2D array of SymPy expression strings."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
-            return str(e)
-        return state.create_custom_metric(components, coord_symbols, config)
+            return format_output(str(e), output_format)
+        return format_output(state.create_custom_metric(components, coord_symbols, config), output_format)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "print_latex_tensor"))

@@ -56,9 +56,9 @@ Multi-step computations build up state across calls using the same `session_id`:
    → session_id = "a1b2c3d4-..."
 2. intro(session_id, var_name="x")
 3. introduce_expression(session_id, expression="x**2")
-   → stored as expr_0
+   → {"key": "expr_0", "result": "x**2", "latex": "x^{2}"}
 4. differentiate_expression(session_id, expr_key="expr_0", var_name="x")
-   → stored as expr_1, value: 2*x
+   → {"key": "expr_1", "result": "2*x", "latex": "2 x"}
 5. list_session_state(session_id)
    → shows all symbols and expression values at a glance
 ```
@@ -69,14 +69,18 @@ Symbols introduced with `intro` are referenced by name in expression strings. Ex
 
 ---
 
-## result vs result_key
+## Results and keys
 
-All computation endpoints return two fields:
+Every computing tool stores its result and returns JSON:
 
-- `result` — the human-readable computed value (e.g. `"2*x"`, `"Matrix([[1, 0], [0, 1]])"`)
-- `result_key` — the session key (e.g. `"expr_1"`) for use as `expr_key` in subsequent calls
+- `key` — the session key (e.g. `"expr_1"`) to pass as `expr_key` (or `matrix_key`, `metric_key`, …) in later calls, or to reference as `@expr_1` inside an expression string
+- `result` — the stored value as a SymPy string (e.g. `"2*x"`, `"{-1, 1}"`)
+- `latex` — the same value in LaTeX
+- some tools add fields, e.g. `series_expansion` adds `series` (with the big-O term)
 
-Symbol introduction (`/symbols/intro`) returns only `result` (the variable name). Solve and LaTeX endpoints return only `result` (the formatted output). Only computation endpoints that store a new object in the session return a `result_key`.
+Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string a tool returned before this payload existed.
+
+`intro`, `intro_many`, `introduce_function`, `create_coordinate_system`, the `print_latex_*` tools and `search_predefined_metrics` return plain text. `check_equivalence` returns a JSON verdict.
 
 ---
 

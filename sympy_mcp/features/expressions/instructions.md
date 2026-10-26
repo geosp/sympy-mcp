@@ -1,10 +1,10 @@
 # Expression Tools
 
-Use the same `session_id` across all calls to share state. Symbols must be introduced with `/symbols/intro` before they can appear in expression strings. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. Symbols must be introduced with `intro` before they can appear in expression strings. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -26,14 +26,14 @@ Parse and store a mathematical expression string.
 - `expression` (str): Expression string using SymPy syntax (e.g., `"x**2 + 2*x + 1"`, `"sin(x)*cos(y)"`)
 - `canonicalize` (bool): If True, simplify/expand the expression. Default: `true`
 - `name` (str, optional): Custom key name (default: auto-generated `"expr_N"`)
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the expression as a string; `result_key` — session key (e.g. `"expr_0"`) to pass as `expr_key` in subsequent calls.
+**Returns:** JSON — `result` — the expression as a string; `key` — session key (e.g. `"expr_0"`) to pass as `expr_key` in subsequent calls; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/introduce
-{"session_id": "s1", "expression": "x**2 + 2*x + 1"}
-→ {"success": true, "result": "x**2 + 2*x + 1", "result_key": "expr_0"}
+```
+introduce_expression(session_id="s1", expression="x**2 + 2*x + 1")
+→ {"key": "expr_0", "result": "x**2 + 2*x + 1", "latex": "x^{2} + 2 x + 1"}
 ```
 
 ---
@@ -53,8 +53,9 @@ Parse and store an equation lhs = rhs.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `lhs_expression` (str): Left-hand side expression string
 - `rhs_expression` (str): Right-hand side expression string
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the equation as a string (e.g. `"Eq(x**2, 1)"`); `result_key` — session key for use in solve tools.
+**Returns:** JSON — `result` — the equation as a string (e.g. `"Eq(x**2, 1)"`); `key` — session key for use in solve tools; `latex` — the result in LaTeX.
 
 ---
 
@@ -74,9 +75,9 @@ Render a stored expression as LaTeX.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `expr_key` (str): Session key from a previous call's `result_key` field.
+- `expr_key` (str): Session key from a previous call's `key` field.
 
-**Returns:** `result` — LaTeX string (e.g. `"x^{2} + 2 x + 1"`). No `result_key` — LaTeX output is not stored in the session.
+**Returns:** The LaTeX string as plain text (e.g. `"x^{2} + 2 x + 1"`), followed by the assumptions on its symbols. It is not stored in the session.
 
 ---
 
@@ -95,15 +96,15 @@ Substitute a variable with another stored expression, or with an expression stri
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to substitute into
 - `var_name` (str): Name of the variable to replace
-- `replacement_expr_key` (str): Session key of the expression to substitute in (a `result_key` from a previous call), or an expression string such as `"3"` or `"@expr_1 + 1"`. A bare name that is neither a stored key nor an introduced symbol is reported as not found.
+- `replacement_expr_key` (str): Session key of the expression to substitute in (the `key` returned by a previous call), or an expression string such as `"3"` or `"@expr_1 + 1"`. A bare name that is neither a stored key nor an introduced symbol is reported as not found.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the substituted expression as a string; `result_key` — session key for the new expression.
+**Returns:** JSON — `result` — the substituted expression as a string; `key` — session key for the new expression; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/substitute
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x", "replacement_expr_key": "expr_1"}
-→ {"success": true, "result": "4 + 2*y + y**2", "result_key": "expr_2"}
+```
+substitute_expression(session_id="s1", expr_key="expr_0", var_name="x", replacement_expr_key="expr_1")
+→ {"key": "expr_2", "result": "4 + 2*y + y**2", "latex": "y^{2} + 2 y + 4"}
 ```
 
 ---
@@ -124,14 +125,14 @@ Factor an expression into irreducible components over the rationals.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to factor.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the factored expression (e.g. `"(x - 1)*(x + 1)"`); `result_key` — session key for the factored form.
+**Returns:** JSON — `result` — the factored expression (e.g. `"(x - 1)*(x + 1)"`); `key` — session key for the factored form; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/factor
-{"session_id": "s1", "expr_key": "expr_0"}
-→ {"success": true, "result": "(x - 1)*(x + 1)", "result_key": "expr_1"}
+```
+factor_expression(session_id="s1", expr_key="expr_0")
+→ {"key": "expr_1", "result": "(x - 1)*(x + 1)", "latex": "\\left(x - 1\\right) \\left(x + 1\\right)"}
 ```
 
 ---
@@ -152,14 +153,14 @@ Expand a product or power into a sum of terms.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to expand.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the expanded expression (e.g. `"x**2 + 2*x + 1"`); `result_key` — session key.
+**Returns:** JSON — `result` — the expanded expression (e.g. `"x**2 + 2*x + 1"`); `key` — session key; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/expand
-{"session_id": "s1", "expr_key": "expr_0"}
-→ {"success": true, "result": "x**2 + 2*x + 1", "result_key": "expr_1"}
+```
+expand_expression(session_id="s1", expr_key="expr_0")
+→ {"key": "expr_1", "result": "x**2 + 2*x + 1", "latex": "x^{2} + 2 x + 1"}
 ```
 
 ---
@@ -180,14 +181,14 @@ Collect and group terms by powers of a variable.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to collect.
 - `var_name` (str): Variable name to collect by.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the collected expression (e.g. `"x*(y + z + x)"`); `result_key` — session key.
+**Returns:** JSON — `result` — the collected expression (e.g. `"x*(y + z + x)"`); `key` — session key; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/collect
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x"}
-→ {"success": true, "result": "x**2 + x*(y + z)", "result_key": "expr_1"}
+```
+collect_expression(session_id="s1", expr_key="expr_0", var_name="x")
+→ {"key": "expr_1", "result": "x**2 + x*(y + z)", "latex": "x^{2} + x \\left(y + z\\right)"}
 ```
 
 ---
@@ -208,14 +209,14 @@ Decompose a rational expression into partial fractions.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the rational expression.
 - `var_name` (str): Variable to decompose with respect to.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — partial fraction decomposition; `result_key` — session key.
+**Returns:** JSON — `result` — partial fraction decomposition; `key` — session key; `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/apart
-{"session_id": "s1", "expr_key": "expr_0", "var_name": "x"}
-→ {"success": true, "result": "1/(2*(x - 1)) - 1/(2*(x + 1))", "result_key": "expr_1"}
+```
+apart_expression(session_id="s1", expr_key="expr_0", var_name="x")
+→ {"key": "expr_1", "result": "1/(2*(x - 1)) - 1/(2*(x + 1))", "latex": "- \\frac{1}{2 x + 2} + \\frac{1}{2 x - 2}"}
 ```
 
 ---
@@ -239,12 +240,12 @@ Numerically evaluate an expression to a specified number of significant digits.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to evaluate.
 - `n` (int, optional): Number of significant digits. Default: `15`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — numerical value as a string (e.g. `"3.14159265358979"`); `result_key` — session key for the numerical result (can be chained further).
+**Returns:** JSON — `result` — numerical value as a string (e.g. `"3.14159265358979"`); `key` — session key for the numerical result (can be chained further); `latex` — the result in LaTeX.
 
 **Example:**
-```json
-POST /expressions/evalf
-{"session_id": "s1", "expr_key": "expr_0", "n": 10}
-→ {"success": true, "result": "3.141592654", "result_key": "expr_1"}
+```
+evalf_expression(session_id="s1", expr_key="expr_0", n=10)
+→ {"key": "expr_1", "result": "3.141592654", "latex": "3.141592654"}
 ```

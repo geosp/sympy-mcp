@@ -53,7 +53,9 @@ Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`
 
 ## Available Tools
 
-The sympy-mcp server provides the following tools for symbolic mathematics:
+The sympy-mcp server provides the following tools for symbolic mathematics.
+
+Every computing tool stores its result in the session and returns JSON: `{"key": "expr_3", "result": "x**2 - 1", "latex": "x^{2} - 1"}`. Pass `key` to later calls (`expr_key`, `matrix_key`, …) or reference it as `@expr_3` inside any expression string, e.g. `introduce_expression("@expr_3 - @expr_5")`. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain-string return values from earlier versions.
 
 | Tool | Tool ID | Description |
 |------|-------|-------------|

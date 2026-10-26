@@ -146,19 +146,22 @@ flowchart TD
 
 ## Result Key Pattern
 
-Computation tools use a key-based chaining pattern to avoid serializing large symbolic expressions across tool calls:
+Computation tools use a key-based chaining pattern to avoid serializing large symbolic expressions across tool calls. Every computing tool stores its result and returns `{"key", "result", "latex"}`:
 
 ```mermaid
 flowchart LR
-    I["introduce_expression\nexpression: 'x**2 - 1'"] -->|"result_key: 'expr_1'"| F
-    F["factor_expression\nexpr_key: 'expr_1'"] -->|"result_key: 'expr_2'"| L
-    L["print_latex_expression\nexpr_key: 'expr_2'"] -->|"result: '(x-1)(x+1)'"| OUT["Display"]
+    I["introduce_expression\nexpression: 'x**2 - 1'"] -->|"key: 'expr_0'"| F
+    F["factor_expression\nexpr_key: 'expr_0'"] -->|"key: 'expr_1'"| C
+    C["check_equivalence\nexpr_a: '@expr_1'\nexpr_b: '(x-1)*(x+1)'"] -->|"verdict: proved_equal"| OUT["Display"]
 ```
 
-- `result` — human-readable string (for display)
-- `result_key` — session storage key (for chaining into the next tool call)
+- `key` — session storage key, for chaining into the next tool call or for `@key` references inside expression strings
+- `result` — the stored value as a SymPy string
+- `latex` — the stored value in LaTeX
 
-The `series_expansion` tool is a special case: it stores the polynomial (without the big-O term) under the result key, but returns the full series with O() notation in `result` for display.
+Internally, `SymPyState` computing methods return a `StoredResult` (`sympy_mcp/results.py`): a `str` equal to the tool's legacy return value that also carries the key and value. The tool wrapper renders it with `format_output()` according to `output_format` (`"structured"` by default, or `"legacy"`).
+
+The `series_expansion` tool stores the polynomial without the big-O term under `key`, and adds the full series with O() notation as `series` / `series_latex` for display.
 
 ---
 

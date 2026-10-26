@@ -1,10 +1,10 @@
 # Relativity Tools
 
-Use the same `session_id` across all calls to share state. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. See the session tools (`create_session`, `list_session_state`) for session management.
 
 Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `metric_key` or `tensor_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -24,8 +24,9 @@ Load a standard spacetime metric by name. The metric is stored in the session un
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_name` (str): One of the predefined metric enum values (see table below).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_Schwarzschild"`) for use in `calculate_tensor`.
+**Returns:** JSON — `result` — string representation of the metric; `key` — session key (e.g. `"metric_Schwarzschild"`) for use in `calculate_tensor`; `latex` — the result in LaTeX.
 
 **Available predefined metrics** (all 19 are implemented; names keep einsteinpy's spelling, e.g. `ReissnerNordstorm`, `BarriolaVilekin`):
 
@@ -52,10 +53,9 @@ Load a standard spacetime metric by name. The metric is stored in the session un
 | `Schwarzschild` | Spherically symmetric vacuum black hole |
 
 **Example:**
-```json
-POST /relativity/metric/predefined
-{"session_id": "s1", "metric_name": "Schwarzschild"}
-→ {"success": true, "result": "...", "result_key": "metric_Schwarzschild"}
+```
+create_predefined_metric(session_id="s1", metric_name="Schwarzschild")
+→ {"key": "metric_Schwarzschild", "result": "[[1 - r_s/r, 0, 0, 0], [0, -1/(c**2*(1 - r_s/r)), 0, 0], ...]", "latex": "..."}
 ```
 
 ---
@@ -74,7 +74,7 @@ Search for available metrics by keyword.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `query` (str): Search keyword (delegated to `einsteinpy.symbolic.predefined.find`).
 
-**Returns:** `result` — list of matching metric names as a string. Every name returned can be passed to `create_predefined_metric`.
+**Returns:** Plain text listing the matching metric names. Every name returned can be passed to `create_predefined_metric`.
 
 ---
 
@@ -91,11 +91,12 @@ Compute a curvature tensor from a stored metric.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `metric_key` (str): Session key of a stored metric (a `result_key` from `create_predefined_metric` or `create_custom_metric`).
+- `metric_key` (str): Session key of a stored metric (the `key` returned by `create_predefined_metric` or `create_custom_metric`).
 - `tensor_type` (str): One of the tensor type enum values (see table below).
 - `simplify` (bool, optional): Whether to apply `sympy.simplify` to every component of the result (or to the scalar, for `RicciScalar`). Default: `true`. Set to `false` for large metrics such as Kerr or Kerr–Newman, where simplifying every component can take a long time.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — string representation of the tensor; `result_key` — session key (e.g. `"ricciscalar_metric_Schwarzschild"`) for use in `print_latex_tensor`.
+**Returns:** JSON — `result` — string representation of the tensor; `key` — session key (e.g. `"ricciscalar_metric_Schwarzschild"`) for use in `print_latex_tensor`; `latex` — the result in LaTeX.
 
 **Available tensor types:**
 
@@ -111,10 +112,9 @@ Compute a curvature tensor from a stored metric.
 | `EinsteinTensor` | Einstein tensor |
 
 **Example:**
-```json
-POST /relativity/tensor/calculate
-{"session_id": "s1", "metric_key": "metric_Schwarzschild", "tensor_type": "RicciScalar"}
-→ {"success": true, "result": "0", "result_key": "ricciscalar_metric_Schwarzschild"}
+```
+calculate_tensor(session_id="s1", metric_key="metric_Schwarzschild", tensor_type="RicciScalar")
+→ {"key": "ricciscalar_metric_Schwarzschild", "result": "0", "latex": "0"}
 ```
 
 ---
@@ -136,14 +136,14 @@ Define a metric from an explicit component array.
 - `components` (list of list of str): 2D list of SymPy expression strings (e.g. `[["1", "0"], ["0", "r**2"]]`). Use `"0"` for zero components. Components can use any symbol introduced with `intro`/`intro_many` (with its assumptions) and any function introduced with `introduce_function`, e.g. `"-exp(2*a(t, r))"`.
 - `coord_symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`). If a name matches a symbol already introduced in the session, that symbol (and its assumptions) is used as the coordinate.
 - `config` (str, optional): Index configuration — `"ll"` for covariant (default) or `"uu"` for contravariant.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_custom_0"`) for use in `calculate_tensor`.
+**Returns:** JSON — `result` — string representation of the metric; `key` — session key (e.g. `"metric_custom_0"`) for use in `calculate_tensor`; `latex` — the result in LaTeX.
 
 **Example (flat 2D polar metric):**
-```json
-POST /relativity/metric/custom
-{"session_id": "s1", "components": [["1", "0"], ["0", "r**2"]], "coord_symbols": ["r", "theta"], "config": "ll"}
-→ {"success": true, "result": "...", "result_key": "metric_custom_0"}
+```
+create_custom_metric(session_id="s1", components=[["1", "0"], ["0", "r**2"]], coord_symbols=["r", "theta"], config="ll")
+→ {"key": "metric_custom_0", "result": "[[1, 0], [0, r**2]]", "latex": "\\left[\\begin{matrix}1 & 0\\\\0 & r^{2}\\end{matrix}\\right]"}
 ```
 
 ---
@@ -161,6 +161,6 @@ Render a stored tensor or metric as a LaTeX string.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `tensor_key` (str): Session key of a stored tensor or metric (a `result_key` from any previous call).
+- `tensor_key` (str): Session key of a stored tensor or metric (the `key` returned by any previous call).
 
-**Returns:** `result` — LaTeX string. No `result_key` — LaTeX output is not stored in the session.
+**Returns:** The LaTeX string as plain text. It is not stored in the session. (Computing tools already include `latex` in their JSON payload, so this is only needed for metrics or tensors created with `output_format="legacy"`.)

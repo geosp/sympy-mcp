@@ -1,8 +1,8 @@
 # Function and Differential Equation Tools
 
-Use the same `session_id` across all calls to share state. See `POST /session/reset` docs for the full session management guide.
+Use the same `session_id` across all calls to share state. See the session tools (`create_session`, `list_session_state`) for session management.
 
-All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
+Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
@@ -23,13 +23,12 @@ Introduce a symbolic function for use in differential equations.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `func_name` (str): Name of the function (e.g., `"f"`, `"g"`, `"u"`).
 
-**Returns:** `result` — the function name confirming creation (e.g. `"f"`). No `result_key` — functions are referenced by name, not by key.
+**Returns:** The function name as plain text (e.g. `"f"`). Functions are referenced by name in expression strings, not by key.
 
 **Example:**
-```json
-POST /functions/introduce
-{"session_id": "s1", "func_name": "f"}
-→ {"success": true, "result": "f"}
+```
+introduce_function(session_id="s1", func_name="f")
+→ "f"
 ```
 
 ---
@@ -51,14 +50,14 @@ Solve an ordinary differential equation.
 - `expr_key` (str): Session key of the ODE expression (the equation, which should equal 0).
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): ODE solver hint. Default: `"default"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the solution as a string (e.g. `"Eq(f(x), C1*exp(x))"`); `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the solution as an equation (e.g. `"Eq(f(x), C1*exp(x))"`), or a list of equations when there are several branches; `key` — session key the solution is stored under; `latex` — the solution in LaTeX. With `output_format="legacy"`: the LaTeX string only.
 
 **Example:**
-```json
-POST /functions/dsolve
-{"session_id": "s1", "expr_key": "expr_0", "func_name": "f"}
-→ {"success": true, "result": "Eq(f(x), C1*exp(x))", "result_key": "expr_1"}
+```
+dsolve_ode(session_id="s1", expr_key="expr_0", func_name="f")
+→ {"key": "expr_1", "result": "Eq(f(x), C1*exp(x))", "latex": "f{\\left(x \\right)} = C_{1} e^{x}"}
 ```
 
 ---
@@ -79,14 +78,14 @@ Solve a coupled system of ordinary differential equations.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_keys` (list[str]): Session keys of the ODE expressions (each should equal 0 or be an `Eq`).
 - `func_names` (list[str]): Names of the functions to solve for (each must be introduced with `introduce_function`).
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — comma-separated LaTeX solutions, one per equation; `result_key` — not returned (chain via `introduce_expression` if needed).
+**Returns:** JSON — `result` — the list of solution equations, one per function; `key` — session key the list is stored under; `latex` — the list in LaTeX. With `output_format="legacy"`: comma-separated LaTeX solutions only.
 
 **Example:**
-```json
-POST /functions/dsolve-system
-{"session_id": "s1", "expr_keys": ["expr_0", "expr_1"], "func_names": ["h1", "h2"]}
-→ {"success": true, "result": "Eq(h_{1}(t), ...), Eq(h_{2}(t), ...)"}
+```
+dsolve_system(session_id="s1", expr_keys=["expr_0", "expr_1"], func_names=["h1", "h2"])
+→ {"key": "expr_2", "result": "[Eq(h1(t), C1*sin(t) + C2*cos(t)), Eq(h2(t), C1*cos(t) - C2*sin(t))]", "latex": "..."}
 ```
 
 ---
@@ -107,12 +106,12 @@ Solve a partial differential equation.
 - `expr_key` (str): Session key of the PDE expression.
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): PDE solver hint. Default: `"default"`.
+- `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
-**Returns:** `result` — the solution as a string; `result_key` — session key for chaining.
+**Returns:** JSON — `result` — the solution as an equation; `key` — session key the solution is stored under; `latex` — the solution in LaTeX. With `output_format="legacy"`: the LaTeX string only.
 
 **Example:**
-```json
-POST /functions/pdsolve
-{"session_id": "s1", "expr_key": "expr_0", "func_name": "u"}
-→ {"success": true, "result": "Eq(u(x, y), F(x + y))", "result_key": "expr_1"}
+```
+pdsolve_pde(session_id="s1", expr_key="expr_0", func_name="u")
+→ {"key": "expr_1", "result": "Eq(u(x, y), F(x - y))", "latex": "u{\\left(x,y \\right)} = F{\\left(x - y \\right)}"}
 ```
