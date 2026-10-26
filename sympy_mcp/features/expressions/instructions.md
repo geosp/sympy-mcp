@@ -2,6 +2,8 @@
 
 Use the same `session_id` across all calls to share state. Symbols must be introduced with `/symbols/intro` before they can appear in expression strings. See `POST /session/reset` docs for the full session management guide.
 
+Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
+
 All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `expr_key` in subsequent calls).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
@@ -79,7 +81,7 @@ Render a stored expression as LaTeX.
 ---
 
 ## substitute_expression
-Substitute a variable with another stored expression.
+Substitute a variable with another stored expression, or with an expression string.
 
 **When to use:**
 - To plug a computed value or sub-expression into another expression
@@ -87,14 +89,13 @@ Substitute a variable with another stored expression.
 - To compose results from multiple computation steps
 
 **When NOT to use:**
-- To substitute a numeric constant — introduce the constant as an expression first, then substitute
 - When you just want to evaluate numerically — use `evalf_expression` instead
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to substitute into
 - `var_name` (str): Name of the variable to replace
-- `replacement_expr_key` (str): Session key of the expression to substitute in (a `result_key` from a previous call)
+- `replacement_expr_key` (str): Session key of the expression to substitute in (a `result_key` from a previous call), or an expression string such as `"3"` or `"@expr_1 + 1"`. A bare name that is neither a stored key nor an introduced symbol is reported as not found.
 
 **Returns:** `result` — the substituted expression as a string; `result_key` — session key for the new expression.
 

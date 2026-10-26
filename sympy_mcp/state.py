@@ -25,6 +25,7 @@ from sympy.physics.units import (
     gravitational_constant, planck, day, year, minute, hour,
 )
 
+from sympy_mcp.parsing import parse_expression
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
 )
@@ -91,6 +92,11 @@ class SymPyState:
 
     def _parse_dict(self) -> Dict[str, Any]:
         return {**self.local_vars, **self.functions}
+
+    def _parse(self, text: str, evaluate: bool = True, extra: Optional[Dict[str, Any]] = None) -> Any:
+        """Parse an expression string with the session namespace and `@key` references."""
+        namespace = {**self._parse_dict(), **(extra or {})}
+        return parse_expression(text, namespace, self.expressions, evaluate=evaluate)
 
     def _coerce_domain(self, domain) -> "Domain":
         """Accept either a Domain enum or a string value."""
@@ -249,8 +255,7 @@ class SymPyState:
         canonicalize: bool = True,
         expr_var_name: Optional[str] = None,
     ) -> str:
-        parse_dict = self._parse_dict()
-        parsed_expr = parse_expr(expression, local_dict=parse_dict, evaluate=canonicalize)
+        parsed_expr = self._parse(expression, evaluate=canonicalize)
         if expr_var_name is None:
             expr_key = f"expr_{self.expression_counter}"
         else:
@@ -260,9 +265,8 @@ class SymPyState:
         return expr_key
 
     def introduce_equation(self, lhs_expression: str, rhs_expression: str) -> str:
-        parse_dict = self._parse_dict()
-        lhs_expr = parse_expr(lhs_expression, local_dict=parse_dict)
-        rhs_expr = parse_expr(rhs_expression, local_dict=parse_dict)
+        lhs_expr = self._parse(lhs_expression)
+        rhs_expr = self._parse(rhs_expression)
         eq_key = f"eq_{self.expression_counter}"
         self.expressions[eq_key] = Eq(lhs_expr, rhs_expr)
         self.expression_counter += 1
@@ -332,13 +336,20 @@ class SymPyState:
             return f"Error: Expression with key '{expr_key}' not found."
         if var_name not in self.local_vars:
             return f"Error: Variable '{var_name}' not found. Please introduce it first."
-        if replacement_expr_key not in self.expressions:
+        # The replacement is a stored key or, failing that, an expression string
+        # (which may use @key references). A bare unknown name is still an error.
+        if replacement_expr_key not in self.expressions and (
+            replacement_expr_key.isidentifier() and replacement_expr_key not in self.local_vars
+        ):
             return f"Error: Replacement expression with key '{replacement_expr_key}' not found."
 
         try:
             expr = self.expressions[expr_key]
             var = self.local_vars[var_name]
-            replacement = self.expressions[replacement_expr_key]
+            if replacement_expr_key in self.expressions:
+                replacement = self.expressions[replacement_expr_key]
+            else:
+                replacement = self._parse(replacement_expr_key)
             result = expr.subs(var, replacement)
             result_key = self._next_expr_key()
             self.expressions[result_key] = result
@@ -612,9 +623,8 @@ class SymPyState:
             var = self.local_vars[var_name]
             bounds = None
             if lower_bound is not None and upper_bound is not None:
-                parse_dict = self._parse_dict()
-                lower = parse_expr(lower_bound, local_dict=parse_dict)
-                upper = parse_expr(upper_bound, local_dict=parse_dict)
+                lower = self._parse(lower_bound)
+                upper = self._parse(upper_bound)
                 bounds = (var, lower, upper)
 
             result = integrate(expr, bounds) if bounds else integrate(expr, var)
@@ -648,7 +658,7 @@ class SymPyState:
         if var_name not in self.local_vars:
             return f"Error: Symbol '{var_name}' not found. Introduce it first."
         try:
-            point_expr = sympy.sympify(point, locals=self.local_vars)
+            point_expr = self._parse(point)
             result = sympy.limit(self.expressions[expr_key], self.local_vars[var_name], point_expr, dir=direction)
             key = self._next_expr_key()
             self.expressions[key] = result
@@ -662,7 +672,7 @@ class SymPyState:
         if var_name not in self.local_vars:
             return f"Error: Symbol '{var_name}' not found. Introduce it first."
         try:
-            point_expr = sympy.sympify(point, locals=self.local_vars)
+            point_expr = self._parse(point)
             full_series = self.expressions[expr_key].series(self.local_vars[var_name], point_expr, order)
             stored = full_series.removeO()
             key = self._next_expr_key()
@@ -678,8 +688,8 @@ class SymPyState:
             return f"Error: Symbol '{var_name}' not found. Introduce it first."
         try:
             var = self.local_vars[var_name]
-            lower_expr = sympy.sympify(lower_bound, locals=self.local_vars)
-            upper_expr = sympy.sympify(upper_bound, locals=self.local_vars)
+            lower_expr = self._parse(lower_bound)
+            upper_expr = self._parse(upper_bound)
             result = sympy.summation(self.expressions[expr_key], (var, lower_expr, upper_expr))
             key = self._next_expr_key()
             self.expressions[key] = result
@@ -727,10 +737,10 @@ class SymPyState:
 
         try:
             cs = self.coordinate_systems[coord_sys_name]
-            parse_dict = {**self._parse_dict(), coord_sys_name: cs}
-            x_comp = parse_expr(component_x, local_dict=parse_dict)
-            y_comp = parse_expr(component_y, local_dict=parse_dict)
-            z_comp = parse_expr(component_z, local_dict=parse_dict)
+            extra = {coord_sys_name: cs}
+            x_comp = self._parse(component_x, extra=extra)
+            y_comp = self._parse(component_y, extra=extra)
+            z_comp = self._parse(component_z, extra=extra)
 
             vector_field = (
                 x_comp * cs.base_vectors()[0]
@@ -844,7 +854,6 @@ class SymPyState:
         matrix_var_name: Optional[str] = None,
     ) -> str:
         try:
-            parse_dict = self._parse_dict()
             processed_data = []
             for row in matrix_data:
                 processed_row = []
@@ -852,7 +861,7 @@ class SymPyState:
                     if isinstance(elem, (int, float)):
                         processed_row.append(elem)
                     else:
-                        processed_row.append(parse_expr(str(elem), local_dict=parse_dict))
+                        processed_row.append(self._parse(str(elem)))
                 processed_data.append(processed_row)
 
             matrix = Matrix(processed_data)
@@ -1062,7 +1071,7 @@ class SymPyState:
                 self.user_symbols[name] if name in self.user_symbols else sympy.Symbol(name)
                 for name in coord_symbols
             )
-            parse_dict = {**self._parse_dict(), **{str(sym): sym for sym in sympy_symbols}}
+            coords = {str(sym): sym for sym in sympy_symbols}
 
             sympy_components = []
             for row in components:
@@ -1071,7 +1080,7 @@ class SymPyState:
                     if expr_str == "0":
                         sympy_row.append(0)
                     else:
-                        sympy_row.append(parse_expr(expr_str, local_dict=parse_dict))
+                        sympy_row.append(self._parse(expr_str, extra=coords))
                 sympy_components.append(sympy_row)
 
             metric_obj = MetricTensor(sympy_components, sympy_symbols, config=config)

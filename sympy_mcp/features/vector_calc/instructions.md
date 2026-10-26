@@ -2,6 +2,8 @@
 
 Use the same `session_id` across all calls to share state. See `POST /session/reset` docs for the full session management guide.
 
+Expression strings can refer to stored results with `@key` — for example `"@expr_7 - @expr_9"` or `"diff(@expr_3, x)"` — instead of retyping them. The referenced value is used exactly as stored. An unknown key is an error. `@` directly after an operand (`A@B`) keeps its meaning of matrix multiplication; use `*` to multiply by a reference (`2*@expr_1`).
+
 All computation tools return `result` (the human-readable value) and `result_key` (the session key to pass as `vector_field_key` or `scalar_field_key` in subsequent calls).
 
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
