@@ -77,6 +77,11 @@ Search for available metrics by keyword.
 
 **Returns:** Plain text listing the matching metric names. Every name returned can be passed to `create_predefined_metric`.
 
+**Example:**
+```
+search_predefined_metrics(session_id="s1", query="Sitter")
+→ "Found metrics: AntiDeSitter, AntiDeSitterStatic, DeSitter"
+```
 ---
 
 ## calculate_tensor
@@ -168,6 +173,11 @@ Render a stored tensor or metric as a LaTeX string.
 
 **Returns:** The LaTeX string as plain text. It is not stored in the session. (Computing tools already include `latex` in their JSON payload, so this is only needed for metrics or tensors created with `output_format="legacy"`.)
 
+**Example:**
+```
+print_latex_tensor(session_id="s1", tensor_key="metric_custom_0")   # [[1, 0], [0, r**2]]
+→ "\\left[\\begin{matrix}1 & 0\\\\0 & r^{2}\\end{matrix}\\right]"
+```
 ---
 
 ## create_tensor

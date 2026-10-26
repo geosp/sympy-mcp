@@ -45,6 +45,11 @@ Use `list_sessions` to see all active sessions with their descriptions and times
 
 **Returns:** JSON with `sessions` (list of session objects) and `count`.
 
+**Example:**
+```
+list_sessions()
+→ {"sessions": [{"session_id": "a1b2c3d4-...", "description": "...", "created_at": "...", "last_accessed": "..."}], "count": 1}
+```
 ---
 
 ## Typical workflow
@@ -102,6 +107,12 @@ Unit constants (meter, second, kilogram, etc.) are re-initialized automatically 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 
+**Example:**
+```
+reset_state(session_id="s1")
+→ "State reset successfully. All variables, functions, expressions, and other objects have been cleared."
+```
+
 **Returns:** `"State reset successfully. All variables, functions, expressions, and other objects have been cleared."`
 
 **When to use:**
@@ -134,6 +145,12 @@ Returns `{}` if the session is empty.
 
 **Returns:** JSON string. Use this when you need to know what `expr_key` values are available before chaining calls, or to recover state in a long session.
 
+**Example:**
+```
+list_session_state(session_id="s1")
+→ {"symbols": ["x"], "expressions": {"eq_0": "Eq(x**2, 1)", "metric_custom_1": "[[1, 0], [0, r**2]]"}, "metrics": ["metric_custom_1"]}
+```
+
 **When to use:**
 - After any computation to verify/inspect the result — this is your go-to inspection tool
 - To see what `expr_key` or `matrix_key` values are available before chaining calls
@@ -165,6 +182,11 @@ Delete a single stored item by key. Searches all stores (expressions, functions,
 
 **Returns:** Confirmation string on success, or an error if the key is not found.
 
+**Example:**
+```
+delete_stored_key(session_id="s1", key="eq_0")
+→ "'eq_0' deleted from expressions."
+```
 ---
 
 ## export_session

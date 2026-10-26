@@ -61,6 +61,11 @@ Parse and store an equation lhs = rhs.
 
 **Returns:** JSON — `result` — the equation as a string (e.g. `"Eq(x**2, 1)"`); `key` — session key for use in solve tools; `latex` — the result in LaTeX.
 
+**Example:**
+```
+introduce_equation(session_id="s1", lhs_expression="x**2", rhs_expression="1")
+→ {"key": "eq_0", "result": "Eq(x**2, 1)", "latex": "x^{2} = 1"}
+```
 ---
 
 ## print_latex_expression
