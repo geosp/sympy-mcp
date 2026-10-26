@@ -131,8 +131,8 @@ Define a metric from an explicit component array.
 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
-- `components` (list of list of str): 2D list of SymPy expression strings (e.g. `[["1", "0"], ["0", "r**2"]]`). Use `"0"` for zero components.
-- `coord_symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`).
+- `components` (list of list of str): 2D list of SymPy expression strings (e.g. `[["1", "0"], ["0", "r**2"]]`). Use `"0"` for zero components. Components can use any symbol introduced with `intro`/`intro_many` (with its assumptions) and any function introduced with `introduce_function`, e.g. `"-exp(2*a(t, r))"`.
+- `coord_symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`). If a name matches a symbol already introduced in the session, that symbol (and its assumptions) is used as the coordinate.
 - `config` (str, optional): Index configuration — `"ll"` for covariant (default) or `"uu"` for contravariant.
 
 **Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_custom_0"`) for use in `calculate_tensor`.

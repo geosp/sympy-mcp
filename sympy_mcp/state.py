@@ -1057,8 +1057,12 @@ class SymPyState:
         if not EINSTEINPY_AVAILABLE:
             return "Error: EinsteinPy library is not available."
         try:
-            sympy_symbols = sympy.symbols(", ".join(coord_symbols))
-            sympy_symbols_dict = {str(sym): sym for sym in sympy_symbols}
+            # Reuse session symbols as coordinates so their assumptions carry over
+            sympy_symbols = tuple(
+                self.user_symbols[name] if name in self.user_symbols else sympy.Symbol(name)
+                for name in coord_symbols
+            )
+            parse_dict = {**self._parse_dict(), **{str(sym): sym for sym in sympy_symbols}}
 
             sympy_components = []
             for row in components:
@@ -1067,7 +1071,7 @@ class SymPyState:
                     if expr_str == "0":
                         sympy_row.append(0)
                     else:
-                        sympy_row.append(parse_expr(expr_str, local_dict=sympy_symbols_dict))
+                        sympy_row.append(parse_expr(expr_str, local_dict=parse_dict))
                 sympy_components.append(sympy_row)
 
             metric_obj = MetricTensor(sympy_components, sympy_symbols, config=config)

@@ -1,6 +1,6 @@
 import pytest
 from sympy_mcp.state import SymPyState, EINSTEINPY_AVAILABLE
-from sympy_mcp.shared.enums import Metric, Tensor
+from sympy_mcp.shared.enums import Assumption, Metric, Tensor
 
 
 # Skip all tests if EinsteinPy is not available
@@ -276,3 +276,38 @@ class TestCalculateTensorSimplify:
         import sympy
         components, _ = self._components(SymPyState(), simplify_result=False)
         assert any(c != sympy.simplify(c) for c in components)
+
+
+class TestCustomMetricSessionNamespace:
+    def test_uses_session_symbol_assumptions(self):
+        state = SymPyState()
+        state.intro("M", [Assumption.POSITIVE], [])
+        key = state.create_custom_metric(
+            [["-(1 - 2*M/r)", "0"], ["0", "1/(1 - 2*M/r)"]], ["t", "r"]
+        )
+        assert key.startswith("metric_custom_")
+        (m,) = [s for s in state.expressions[key][0, 0].free_symbols if s.name == "M"]
+        assert m is state.local_vars["M"]
+        assert m.is_positive is True
+
+    def test_coordinate_reuses_session_symbol(self):
+        state = SymPyState()
+        state.intro("r", [Assumption.POSITIVE], [])
+        key = state.create_custom_metric([["-1", "0"], ["0", "r**2"]], ["t", "r"])
+        r = state.metrics[key].syms[1]
+        assert r is state.local_vars["r"]
+        assert r.is_positive is True
+
+    def test_uses_introduced_functions(self):
+        import sympy
+        state = SymPyState()
+        state.introduce_function("a")
+        state.introduce_function("b")
+        key = state.create_custom_metric(
+            [["-exp(2*a(t, r))", "0"], ["0", "exp(2*b(t, r))"]], ["t", "r"]
+        )
+        g_tt = state.expressions[key][0, 0]
+        t, r = state.metrics[key].syms
+        assert g_tt == -sympy.exp(2 * state.functions["a"](t, r))
+        # The coordinate inside a(t, r) is the metric's own coordinate symbol
+        assert sympy.diff(g_tt, t) != 0
