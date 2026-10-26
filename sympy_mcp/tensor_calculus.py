@@ -13,8 +13,10 @@ from typing import Any, List, Sequence, Tuple
 import sympy
 from einsteinpy.symbolic import ChristoffelSymbols, RiemannCurvatureTensor
 
+from sympy_mcp.operations import OperationError
 
-class TensorError(ValueError):
+
+class TensorError(OperationError):
     pass
 
 

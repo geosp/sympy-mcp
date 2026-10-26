@@ -108,3 +108,85 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
         return format_output(state.summation_expression(expr_key, var_name, lower_bound, upper_bound), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "fourier_transform"))
+    async def fourier_transform(
+        session_id: str,
+        expr_key: str,
+        var_name: str,
+        k_name: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Fourier transform F(k) = integral of f(x) exp(-2 pi i x k) dx."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.fourier_transform(expr_key, var_name, k_name), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "inverse_fourier_transform"))
+    async def inverse_fourier_transform(
+        session_id: str,
+        expr_key: str,
+        k_name: str,
+        var_name: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Inverse Fourier transform (SymPy convention)."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.inverse_fourier_transform(expr_key, k_name, var_name), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "laplace_transform"))
+    async def laplace_transform(
+        session_id: str,
+        expr_key: str,
+        t_name: str,
+        s_name: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Laplace transform F(s) = integral from 0 to oo of f(t) exp(-s t) dt."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.laplace_transform(expr_key, t_name, s_name), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "inverse_laplace_transform"))
+    async def inverse_laplace_transform(
+        session_id: str,
+        expr_key: str,
+        s_name: str,
+        t_name: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Inverse Laplace transform."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.inverse_laplace_transform(expr_key, s_name, t_name), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "numeric_integrate"))
+    async def numeric_integrate(
+        session_id: str,
+        expr_key: str,
+        var_name: str,
+        lower_bound: str,
+        upper_bound: str,
+        precision: int = 15,
+        output_format: str = "structured",
+    ) -> str:
+        """Numeric definite integral with mpmath quadrature at a chosen precision."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.numeric_integrate(expr_key, var_name, lower_bound, upper_bound, precision), output_format)

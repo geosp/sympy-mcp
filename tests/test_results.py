@@ -21,7 +21,9 @@ COMPUTING_TOOLS = {
     "matrix_eigenvalues", "matrix_eigenvectors", "create_predefined_metric", "calculate_tensor",
     "create_custom_metric", "create_tensor", "covariant_derivative", "tensor_divergence",
     "contract_indices", "raise_index", "lower_index", "tensor_component", "kretschmann_scalar",
-    "killing_equation",
+    "killing_equation", "fourier_transform", "inverse_fourier_transform", "laplace_transform",
+    "inverse_laplace_transform", "numeric_integrate", "rewrite_expression", "expand_log_expression",
+    "trigsimp_expression", "powsimp_expression", "nsimplify_expression", "substitute_values",
 }
 
 

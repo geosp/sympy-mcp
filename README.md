@@ -70,6 +70,12 @@ Every computing tool stores its result in the session and returns JSON: `{"key":
 | Collector | `collect_expression` | Collects and groups terms by powers of a variable |
 | Partial Fractions | `apart_expression` | Decomposes a rational expression into partial fractions |
 | Numeric Evaluator | `evalf_expression` | Numerically evaluates an expression to n significant digits |
+| Rewriter | `rewrite_expression` | Rewrites an expression in terms of another function (e.g. exp) |
+| Log Expander | `expand_log_expression` | Expands logarithms of products and powers (optionally forced) |
+| Trig Simplifier | `trigsimp_expression` | Simplifies with trigonometric identities |
+| Power Combiner | `powsimp_expression` | Combines powers with the same base or exponent |
+| Closed-Form Finder | `nsimplify_expression` | Finds a simple exact expression for a floating-point number |
+| Multi-Substitution | `substitute_values` | Substitutes several symbols at once (simultaneously) |
 | Simplifier | `simplify_expression` | Simplifies a mathematical expression using SymPy's canonicalize function |
 | Equivalence Checker | `check_equivalence` | Decides whether two expressions are equal: symbolic proof first, then numeric spot checks that respect symbol assumptions; returns proved_equal, numerically_equal or not_equal (with a counterexample) |
 | Integration | `integrate_expression` | Integrates an expression with respect to a variable |
@@ -77,6 +83,11 @@ Every computing tool stores its result in the session and returns JSON: `{"key":
 | Limit | `limit_expression` | Computes the limit of an expression as a variable approaches a point |
 | Series Expansion | `series_expansion` | Computes the Taylor/Maclaurin series expansion of an expression |
 | Summation | `summation_expression` | Computes a symbolic summation over a variable range |
+| Fourier Transform | `fourier_transform` | Fourier transform, F(k) = ∫ f(x) e^{-2πixk} dx |
+| Inverse Fourier | `inverse_fourier_transform` | Inverse Fourier transform (same convention) |
+| Laplace Transform | `laplace_transform` | Laplace transform with its convergence abscissa |
+| Inverse Laplace | `inverse_laplace_transform` | Inverse Laplace transform |
+| Numeric Integration | `numeric_integrate` | Definite integral by mpmath quadrature at chosen precision, infinite limits allowed |
 | Algebraic Solver | `solve_algebraically` | Solves an equation algebraically for a given variable over a given domain |
 | Linear Solver | `solve_linear_system` | Solves a system of linear equations |
 | Nonlinear Solver | `solve_nonlinear_system` | Solves a system of nonlinear equations |

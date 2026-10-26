@@ -206,3 +206,142 @@ Compute a symbolic or numerical summation over a variable range.
 summation_expression(session_id="s1", expr_key="expr_0", var_name="k", lower_bound="1", upper_bound="n")
 → {"key": "expr_1", "result": "n*(n + 1)/2", "latex": "\\frac{n \\left(n + 1\\right)}{2}"}
 ```
+
+---
+
+## fourier_transform
+Compute the Fourier transform with SymPy's convention `F(k) = ∫ f(x) e^{-2πi x k} dx` (unitary, ordinary frequency).
+
+**When to use:**
+- To transform a function of `x` into frequency space `k`
+- To check a transform pair, together with `check_equivalence`
+
+**When NOT to use:**
+- When your source uses another convention (e.g. `e^{-i k x}` with angular frequency): rescale `k → k/(2π)` and the prefactor yourself, or substitute afterwards with `substitute_values`
+- For one-sided transforms of causal signals — use `laplace_transform`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_key` (str): Session key of `f(x)`.
+- `var_name` (str): The variable `x` (an introduced symbol).
+- `k_name` (str): The frequency variable `k` (an introduced symbol).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
+
+**Returns:** JSON — `key`, `result`, `latex` of `F(k)`. If SymPy cannot evaluate the transform, the result is an unevaluated `FourierTransform(...)` and a `note` says so.
+
+**Example:**
+```
+fourier_transform(session_id="s1", expr_key="expr_0", var_name="x", k_name="k")   # expr_0 = exp(-x**2)
+→ {"key": "expr_1", "result": "sqrt(pi)*exp(-pi**2*k**2)", "latex": "\\sqrt{\\pi} e^{- \\pi^{2} k^{2}}"}
+```
+
+---
+
+## inverse_fourier_transform
+Compute the inverse Fourier transform `f(x) = ∫ F(k) e^{2πi x k} dk` (SymPy's convention, matching `fourier_transform`).
+
+**When to use:**
+- To go back from frequency space to `x`
+- To check that a transform round-trips
+
+**When NOT to use:**
+- For inverse Laplace transforms — use `inverse_laplace_transform`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_key` (str): Session key of `F(k)`.
+- `k_name` (str): The frequency variable `k`.
+- `var_name` (str): The variable `x` of the result.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
+
+**Returns:** JSON — `key`, `result`, `latex` of `f(x)`, with a `note` if SymPy could not evaluate it.
+
+**Example:**
+```
+inverse_fourier_transform(session_id="s1", expr_key="expr_1", k_name="k", var_name="x")
+→ {"key": "expr_2", "result": "exp(-x**2)", "latex": "e^{- x^{2}}"}
+```
+
+---
+
+## laplace_transform
+Compute the Laplace transform `F(s) = ∫_0^∞ f(t) e^{-st} dt`.
+
+**When to use:**
+- To solve linear ODEs with initial conditions by transform methods
+- To find transfer functions or the transform of a causal signal
+
+**When NOT to use:**
+- For two-sided transforms over the whole real line — use `fourier_transform`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_key` (str): Session key of `f(t)`.
+- `t_name` (str): The time variable `t`.
+- `s_name` (str): The transform variable `s`.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
+
+**Returns:** JSON — `key`, `result`, `latex` of `F(s)`; `convergence_abscissa` — the transform converges for `Re(s)` greater than this; `conditions` — any extra conditions SymPy reports. If SymPy cannot evaluate the transform, the result is unevaluated and a `note` says so.
+
+**Example:**
+```
+laplace_transform(session_id="s1", expr_key="expr_0", t_name="t", s_name="s")   # expr_0 = exp(-a*t), a > 0
+→ {"key": "expr_1", "result": "1/(a + s)", "latex": "\\frac{1}{a + s}", "convergence_abscissa": "-a", "conditions": "True"}
+```
+
+---
+
+## inverse_laplace_transform
+Compute the inverse Laplace transform. The result is multiplied by `Heaviside(t)`, since it is defined for `t ≥ 0`.
+
+**When to use:**
+- To go back to the time domain after solving in `s`
+
+**When NOT to use:**
+- For inverse Fourier transforms — use `inverse_fourier_transform`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_key` (str): Session key of `F(s)`.
+- `s_name` (str): The transform variable `s`.
+- `t_name` (str): The time variable `t` of the result.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
+
+**Returns:** JSON — `key`, `result`, `latex` of `f(t)`, with a `note` if SymPy could not evaluate it.
+
+**Example:**
+```
+inverse_laplace_transform(session_id="s1", expr_key="expr_0", s_name="s", t_name="t")   # expr_0 = 1/(s + 1)
+→ {"key": "expr_1", "result": "exp(-t)*Heaviside(t)", "latex": "e^{- t} \\theta\\left(t\\right)"}
+```
+
+---
+
+## numeric_integrate
+Evaluate a definite integral numerically with mpmath quadrature (tanh-sinh / Gauss-Legendre) at a chosen precision. Infinite limits are supported.
+
+**When to use:**
+- When `integrate_expression` cannot find a closed form, or is too slow
+- To check a symbolic result numerically, to many digits
+- For integrals over infinite ranges such as `(-oo, oo)`
+
+**When NOT to use:**
+- When you need an exact symbolic answer — use `integrate_expression`
+- When the integrand has free parameters — substitute numbers for them first (`substitute_values`); the tool reports any symbols other than the integration variable
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `expr_key` (str): Session key of the integrand.
+- `var_name` (str): The integration variable.
+- `lower_bound` (str): Lower limit, e.g. `"0"`, `"-oo"`, `"pi/2"`, `"@expr_3"`.
+- `upper_bound` (str): Upper limit, e.g. `"1"`, `"oo"`.
+- `precision` (int, optional): Number of significant digits, 1–1000. Default: `15`.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
+
+**Returns:** JSON — `key`, `result`, `latex` of the numeric value (a Float with `precision` digits); `precision`; `error_estimate` — mpmath's estimate of the quadrature error.
+
+**Example:**
+```
+numeric_integrate(session_id="s1", expr_key="expr_0", var_name="x", lower_bound="-oo", upper_bound="oo", precision=30)   # expr_0 = exp(-x**2)
+→ {"key": "expr_1", "result": "1.77245385090551602729816748334", "latex": "...", "precision": 30, "error_estimate": "1.0e-37"}
+```

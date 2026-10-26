@@ -28,7 +28,7 @@ from sympy.physics.units import (
 
 from sympy_mcp.parsing import parse_expression
 from sympy_mcp.results import StoredResult
-from sympy_mcp import odes, verification
+from sympy_mcp import expression_ops, odes, transform_ops, verification
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
 )
@@ -442,6 +442,32 @@ class SymPyState:
         except Exception as e:
             return f"Error evaluating expression numerically: {e}"
 
+    # Rewriting and substitution (logic in sympy_mcp/expression_ops.py)
+
+    def rewrite_expression(self, expr_key: str, target: str) -> str:
+        return expression_ops.rewrite_expression(self, expr_key, target)
+
+    def expand_log_expression(self, expr_key: str, force: bool = False) -> str:
+        return expression_ops.expand_log_expression(self, expr_key, force)
+
+    def trigsimp_expression(self, expr_key: str) -> str:
+        return expression_ops.trigsimp_expression(self, expr_key)
+
+    def powsimp_expression(self, expr_key: str, force: bool = False) -> str:
+        return expression_ops.powsimp_expression(self, expr_key, force)
+
+    def nsimplify_expression(
+        self,
+        expr_key: str,
+        constants: Optional[List[str]] = None,
+        tolerance: Optional[float] = None,
+        rational: bool = False,
+    ) -> str:
+        return expression_ops.nsimplify_expression(self, expr_key, constants, tolerance, rational)
+
+    def substitute_values(self, expr_key: str, substitutions: Dict[str, str]) -> str:
+        return expression_ops.substitute_values(self, expr_key, substitutions)
+
     # ------------------------------------------------------------------
     # Verification
     # ------------------------------------------------------------------
@@ -825,6 +851,25 @@ class SymPyState:
             return self._result(key)
         except Exception as e:
             return f"Error computing summation: {e}"
+
+    # Transforms and numeric integration (logic in sympy_mcp/transform_ops.py)
+
+    def fourier_transform(self, expr_key: str, var_name: str, k_name: str) -> str:
+        return transform_ops.fourier_transform(self, expr_key, var_name, k_name, inverse=False)
+
+    def inverse_fourier_transform(self, expr_key: str, k_name: str, var_name: str) -> str:
+        return transform_ops.fourier_transform(self, expr_key, k_name, var_name, inverse=True)
+
+    def laplace_transform(self, expr_key: str, t_name: str, s_name: str) -> str:
+        return transform_ops.laplace_transform(self, expr_key, t_name, s_name)
+
+    def inverse_laplace_transform(self, expr_key: str, s_name: str, t_name: str) -> str:
+        return transform_ops.inverse_laplace_transform(self, expr_key, s_name, t_name)
+
+    def numeric_integrate(
+        self, expr_key: str, var_name: str, lower_bound: str, upper_bound: str, precision: int = 15
+    ) -> str:
+        return transform_ops.numeric_integrate(self, expr_key, var_name, lower_bound, upper_bound, precision)
 
     # ------------------------------------------------------------------
     # Vector calculus

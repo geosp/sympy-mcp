@@ -1,6 +1,6 @@
 """MCP tools for expressions."""
 import logging
-from typing import Optional
+from typing import Dict, List, Optional
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
@@ -121,3 +121,94 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
         return format_output(state.evalf_expression(expr_key, n), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "rewrite_expression"))
+    async def rewrite_expression(
+        session_id: str,
+        expr_key: str,
+        target: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Rewrite an expression in terms of another function, e.g. exp."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.rewrite_expression(expr_key, target), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "expand_log_expression"))
+    async def expand_log_expression(
+        session_id: str,
+        expr_key: str,
+        force: bool = False,
+        output_format: str = "structured",
+    ) -> str:
+        """Expand logarithms of products and powers."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.expand_log_expression(expr_key, force), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "trigsimp_expression"))
+    async def trigsimp_expression(
+        session_id: str,
+        expr_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Simplify using trigonometric identities."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.trigsimp_expression(expr_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "powsimp_expression"))
+    async def powsimp_expression(
+        session_id: str,
+        expr_key: str,
+        force: bool = False,
+        output_format: str = "structured",
+    ) -> str:
+        """Combine powers with the same base or exponent."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.powsimp_expression(expr_key, force), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "nsimplify_expression"))
+    async def nsimplify_expression(
+        session_id: str,
+        expr_key: str,
+        constants: Optional[List[str]] = None,
+        tolerance: Optional[float] = None,
+        rational: bool = False,
+        output_format: str = "structured",
+    ) -> str:
+        """Find a simple exact expression for a floating-point number."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.nsimplify_expression(expr_key, constants, tolerance, rational), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "substitute_values"))
+    async def substitute_values(
+        session_id: str,
+        expr_key: str,
+        substitutions: Dict[str, str],
+        output_format: str = "structured",
+    ) -> str:
+        """Substitute several symbols with values or expressions at once."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.substitute_values(expr_key, substitutions), output_format)
