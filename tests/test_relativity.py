@@ -36,12 +36,21 @@ class TestCreatePredefinedMetric:
 
     def test_invalid_metric(self):
         state = SymPyState()
-        # Try to create a metric that's in the enum but not implemented
-        # For this test, we'll assume ALCUBIERRE_WARP is not implemented
-        # in the provided metric_map
-        result = state.create_predefined_metric(Metric.ALCUBIERRE_WARP)
+        result = state.create_predefined_metric("NotARealMetric")
         assert "Error" in result
-        assert "not implemented" in result
+        assert "Invalid metric name" in result
+
+    @pytest.mark.parametrize("metric", list(Metric), ids=lambda m: m.value)
+    def test_every_enum_metric_is_creatable(self, metric):
+        state = SymPyState()
+        result = state.create_predefined_metric(metric)
+        assert result == f"metric_{metric.value}"
+        assert state.expressions[result].shape == (4, 4)
+
+    def test_create_by_name(self):
+        state = SymPyState()
+        assert state.create_predefined_metric("AlcubierreWarp") == "metric_AlcubierreWarp"
+        assert state.create_predefined_metric("godel") == "metric_Godel"
 
 
 class TestSearchPredefinedMetrics:
@@ -51,6 +60,12 @@ class TestSearchPredefinedMetrics:
         result = state.search_predefined_metrics("Sitter")
         assert "Found metrics" in result
         assert "DeSitter" in result or "AntiDeSitter" in result
+
+    def test_search_results_are_all_creatable(self):
+        state = SymPyState()
+        result = state.search_predefined_metrics("")
+        names = result.removeprefix("Found metrics: ").split(", ")
+        assert sorted(names) == sorted(m.value for m in Metric)
 
     def test_search_no_results(self):
         state = SymPyState()

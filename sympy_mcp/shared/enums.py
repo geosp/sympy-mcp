@@ -114,6 +114,7 @@ class PDEHint(Enum):
 
 
 class Metric(Enum):
+    # Each value is the class name in einsteinpy.symbolic.predefined (0.4.0)
     ALCUBIERRE_WARP = "AlcubierreWarp"
     BARRIOLA_VILEKIN = "BarriolaVilekin"
     BERTOTTI_KASNER = "BertottiKasner"

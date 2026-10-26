@@ -25,7 +25,7 @@ Load a standard spacetime metric by name. The metric is stored in the session un
 
 **Returns:** `result` — string representation of the metric; `result_key` — session key (e.g. `"metric_Schwarzschild"`) for use in `calculate_tensor`.
 
-**Available predefined metrics:**
+**Available predefined metrics** (all 19 are implemented; names keep einsteinpy's spelling, e.g. `ReissnerNordstorm`, `BarriolaVilekin`):
 
 | Enum value | Description |
 |---|---|
@@ -41,7 +41,7 @@ Load a standard spacetime metric by name. The metric is stored in the session un
 | `Ernst` | Ernst metric |
 | `Godel` | Godel universe |
 | `JanisNewmanWinicour` | Janis–Newman–Winicour metric |
-| `Minkowski` | Minkowski (flat) spacetime in spherical-like coordinates |
+| `Minkowski` | Minkowski (flat) spacetime in Cartesian coordinates (same as `MinkowskiCartesian`) |
 | `MinkowskiCartesian` | Minkowski spacetime in Cartesian coordinates |
 | `MinkowskiPolar` | Minkowski spacetime in polar coordinates |
 | `Kerr` | Rotating black hole (Kerr) |
@@ -72,7 +72,7 @@ Search for available metrics by keyword.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `query` (str): Search keyword (delegated to `einsteinpy.symbolic.predefined.find`).
 
-**Returns:** `result` — list of matching metric names as a string.
+**Returns:** `result` — list of matching metric names as a string. Every name returned can be passed to `create_predefined_metric`.
 
 ---
 

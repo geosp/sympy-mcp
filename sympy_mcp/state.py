@@ -35,10 +35,8 @@ try:
         WeylTensor, ChristoffelSymbols, StressEnergyMomentumTensor,
         RiemannCurvatureTensor, SchoutenTensor,
     )
-    from einsteinpy.symbolic.predefined import (
-        Schwarzschild, Minkowski, MinkowskiCartesian, KerrNewman, Kerr,
-        AntiDeSitter, DeSitter, ReissnerNordstorm, find,
-    )
+    from einsteinpy.symbolic import predefined
+    from einsteinpy.symbolic.predefined import find
     EINSTEINPY_AVAILABLE = True
 except ImportError:
     EINSTEINPY_AVAILABLE = False
@@ -953,21 +951,12 @@ class SymPyState:
             if metric_enum is None:
                 return f"Error: Invalid metric name '{metric_name}'. Available: {', '.join(m.value for m in Metric)}"
 
-            metric_map = {
-                Metric.SCHWARZSCHILD: Schwarzschild,
-                Metric.MINKOWSKI: Minkowski,
-                Metric.MINKOWSKI_CARTESIAN: MinkowskiCartesian,
-                Metric.KERR_NEWMAN: KerrNewman,
-                Metric.KERR: Kerr,
-                Metric.ANTI_DE_SITTER: AntiDeSitter,
-                Metric.DE_SITTER: DeSitter,
-                Metric.REISSNER_NORDSTROM: ReissnerNordstorm,
-            }
-
-            if metric_enum not in metric_map:
+            # Every Metric value is the name of a class in einsteinpy.symbolic.predefined
+            metric_class = getattr(predefined, metric_enum.value, None)
+            if metric_class is None:
                 return f"Error: Metric '{metric_enum.value}' not implemented."
 
-            metric_obj = metric_map[metric_enum]()
+            metric_obj = metric_class()
             metric_key = f"metric_{metric_enum.value}"
             self.metrics[metric_key] = metric_obj
             self.expressions[metric_key] = metric_obj.tensor()
@@ -979,7 +968,8 @@ class SymPyState:
         if not EINSTEINPY_AVAILABLE:
             return "Error: EinsteinPy library is not available."
         try:
-            results = find(query)
+            available = {m.value for m in Metric}
+            results = [name for name in find(query) if name in available]
             if not results:
                 return f"No metrics found matching '{query}'."
             return f"Found metrics: {', '.join(results)}"
