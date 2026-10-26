@@ -6,7 +6,7 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.12"
 dependencies = [
-    "mcp-service-kit @ git+https://github.com/geosp/mcp-service-kit@v0.1.0",
+    "mcp-service-kit @ git+https://github.com/geosp/mcp-service-kit@v0.2.0",
     "sympy==1.14.0",
     "fastmcp==4.1.4",
     "einsteinpy==0.4.0",

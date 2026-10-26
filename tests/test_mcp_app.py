@@ -7,6 +7,7 @@ import json
 import re
 from pathlib import Path
 
+import pytest
 from fastmcp import Client
 
 from sympy_mcp.config import AppConfig
@@ -37,6 +38,26 @@ def test_config_defaults():
 def test_session_ttl_env(monkeypatch):
     monkeypatch.setenv("SYMPY_SESSION_TTL", "60")
     assert AppConfig().sympy.session_ttl_seconds == 60
+
+
+def test_http_starts_without_auth_by_default(monkeypatch):
+    monkeypatch.setenv("MCP_TRANSPORT", "http")
+    config = AppConfig()
+    assert config.server.transport == "http"
+    assert _create_mcp_for(config) is not None
+
+
+def test_http_with_auth_enabled_fails_closed(monkeypatch):
+    # sympy-mcp has no auth provider, so mcp-service-kit >= 0.2 refuses to serve HTTP
+    # with auth enabled instead of silently serving without it
+    monkeypatch.setenv("MCP_TRANSPORT", "http")
+    monkeypatch.setenv("MCP_AUTH_ENABLED", "true")
+    with pytest.raises(ValueError):
+        _create_mcp_for(AppConfig())
+
+
+def _create_mcp_for(config):
+    return SymPyMCPServer(config.server, create_service(config)).create_mcp_app()
 
 
 def test_all_feature_tools_registered():

@@ -273,7 +273,7 @@ This is the recommended transport when running the server as a standalone proces
 uv run sympy-mcp --mode http --port 8081
 ```
 
-The server has no built-in authentication. Put it behind a gateway if it needs to be reachable beyond localhost.
+The server has no built-in authentication. Put it behind a gateway if it needs to be reachable beyond localhost. HTTP mode runs with authentication disabled by default (`MCP_AUTH_ENABLED=false`) and logs a warning saying so; setting `MCP_AUTH_ENABLED=true` makes it refuse to start, since there is no auth provider to enforce it.
 
 A `/health` endpoint is exposed in HTTP mode, returning:
 

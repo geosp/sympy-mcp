@@ -841,8 +841,8 @@ wheels = [
 
 [[package]]
 name = "mcp-service-kit"
-version = "0.1.0"
-source = { git = "https://github.com/geosp/mcp-service-kit?rev=v0.1.0#1c9a7b15059895414a95770ebce64acb7b53ba4a" }
+version = "0.2.0"
+source = { git = "https://github.com/geosp/mcp-service-kit?rev=v0.2.0#15e3170b05d6cd137511cdd24098f1d328071571" }
 dependencies = [
     { name = "fastmcp" },
     { name = "pydantic" },
@@ -1658,7 +1658,7 @@ relativity = [
 requires-dist = [
     { name = "einsteinpy", specifier = "==0.4.0" },
     { name = "fastmcp", specifier = "==4.1.4" },
-    { name = "mcp-service-kit", git = "https://github.com/geosp/mcp-service-kit?rev=v0.1.0" },
+    { name = "mcp-service-kit", git = "https://github.com/geosp/mcp-service-kit?rev=v0.2.0" },
     { name = "sympy", specifier = "==1.14.0" },
 ]
 

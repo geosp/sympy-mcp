@@ -39,7 +39,7 @@ A `/health` custom route is registered on the FastMCP instance via `@mcp.custom_
 | `server` | `SymPyServerConfig` (extends the kit's `BaseServerConfig`) | `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), `MCP_AUTH_ENABLED` (default `false`) |
 | `sympy` | `SymPyConfig` | `SYMPY_SESSION_TTL` (default `1800`) |
 
-The server has no auth provider. Authentication is expected at the gateway in front of it.
+The server has no auth provider. Authentication is expected at the gateway in front of it. Setting `MCP_AUTH_ENABLED=true` makes HTTP mode refuse to start (mcp-service-kit ≥ 0.2 fails closed when auth is enabled without a provider), rather than serve without authentication.
 
 ---
 
