@@ -295,7 +295,7 @@ class SymPyState:
         self.expression_counter += 1
         return self._result(eq_key)
 
-    def print_latex_expression(self, expr_key: str) -> str:
+    def print_latex_expression(self, expr_key: str, include_assumptions: bool = True) -> str:
         if expr_key not in self.expressions:
             return f"Error: Expression key '{expr_key}' not found."
 
@@ -328,6 +328,8 @@ class SymPyState:
                 return str(expr)
 
         latex_str = sympy.latex(expr)
+        if not include_assumptions:
+            return latex_str
 
         try:
             variables_in_expr = expr.free_symbols

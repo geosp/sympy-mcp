@@ -47,13 +47,14 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
     async def print_latex_expression(
         session_id: str,
         expr_key: str,
+        include_assumptions: bool = True,
     ) -> str:
         """Render a stored expression as a LaTeX string."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return str(e)
-        return state.print_latex_expression(expr_key)
+        return state.print_latex_expression(expr_key, include_assumptions)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "substitute_expression"))

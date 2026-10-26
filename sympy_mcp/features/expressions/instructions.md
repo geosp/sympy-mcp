@@ -76,8 +76,18 @@ Render a stored expression as LaTeX.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key from a previous call's `key` field.
+- `include_assumptions` (bool, optional): Append a note listing the assumptions on each symbol, e.g. `"(where x is commutative, complex, ...)"`. Default: `true`. Set to `false` for clean LaTeX you can paste into a document.
 
-**Returns:** The LaTeX string as plain text (e.g. `"x^{2} + 2 x + 1"`), followed by the assumptions on its symbols. It is not stored in the session.
+**Returns:** The LaTeX string as plain text. With `include_assumptions=true`, a `(where ...)` note about the symbols' assumptions follows it. It is not stored in the session.
+
+**Example:**
+```
+print_latex_expression(session_id="s1", expr_key="expr_0")
+→ "x^{2} + 2 x + 1 (where x is commutative, complex, finite, ...)"
+
+print_latex_expression(session_id="s1", expr_key="expr_0", include_assumptions=false)
+→ "x^{2} + 2 x + 1"
+```
 
 ---
 

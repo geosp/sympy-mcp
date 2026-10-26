@@ -429,3 +429,17 @@ class TestPdsolvePdeTool:
         result = state.pdsolve_pde(expr_key, "f")
         assert "error" in result.lower()
         assert "function cannot be automatically detected" in result.lower()
+
+
+class TestPrintLatexIncludeAssumptions:
+    def test_default_includes_assumptions(self):
+        state = SymPyState()
+        state.intro("x", [Assumption.REAL], [])
+        key = state.introduce_expression("x**2 + 1")
+        assert state.print_latex_expression(key).startswith("x^{2} + 1 (where x is ")
+
+    def test_clean_latex(self):
+        state = SymPyState()
+        state.intro("x", [Assumption.REAL], [])
+        key = state.introduce_expression("x**2 + 1")
+        assert state.print_latex_expression(key, include_assumptions=False) == "x^{2} + 1"
