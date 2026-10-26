@@ -165,6 +165,12 @@ The `series_expansion` tool stores the polynomial without the big-O term under `
 
 ---
 
+## Transcripts and Export
+
+`SymPyMCPServer.create_middleware()` installs `TranscriptMiddleware` (`sympy_mcp/transcript.py`). For every tool call that names a `session_id`, it appends `{tool, arguments, result}` (or `error`) to that session's `SymPyState.transcript`. The session bookkeeping tools are not recorded. `export_session` renders the transcript as JSON, or as a Python script that replays the calls against a fresh in-process server and compares every result with the recorded one.
+
+---
+
 ## Docker Compose Service
 
 ```mermaid

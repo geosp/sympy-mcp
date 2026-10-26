@@ -8,6 +8,7 @@ from sympy_mcp import timeouts
 from sympy_mcp.config import AppConfig
 from sympy_mcp.service import SymPyMCPService
 from sympy_mcp.session import SymPySessionManager
+from sympy_mcp.transcript import TranscriptMiddleware
 
 
 class SymPyMCPServer(BaseMCPServer):
@@ -28,6 +29,10 @@ class SymPyMCPServer(BaseMCPServer):
     @property
     def service_version(self) -> str:
         return "0.1.0"
+
+    def create_middleware(self) -> list:
+        # Records each session's tool calls for export_session
+        return [TranscriptMiddleware(self.service.session_manager)]
 
 
 def create_service(config: AppConfig) -> SymPyMCPService:

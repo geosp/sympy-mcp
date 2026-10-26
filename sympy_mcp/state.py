@@ -67,6 +67,8 @@ class SymPyState:
         self.tensor_objects: Dict[str, Any] = {}
         self.coordinate_systems: Dict[str, CoordSys3D] = {}
         self.expression_counter: int = 0
+        # Tool calls made in this session, recorded by transcript.TranscriptMiddleware
+        self.transcript: List[Dict[str, Any]] = []
         self.initialize_units()
 
     # ------------------------------------------------------------------

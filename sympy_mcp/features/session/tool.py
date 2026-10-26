@@ -4,6 +4,7 @@ from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
+from sympy_mcp import transcript
 
 logger = logging.getLogger(__name__)
 
@@ -63,3 +64,23 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         except SessionNotFoundError as e:
             return str(e)
         return state.delete_stored_key(key)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "export_session"))
+    async def export_session(
+        session_id: str,
+        format: str = "python",
+    ) -> str:
+        """Export the session's tool calls as a replayable Python script or a JSON transcript."""
+        import json
+        try:
+            info = session_manager.info(session_id)
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return str(e)
+        if format not in transcript.EXPORT_FORMATS:
+            return f"Error: Unknown format '{format}'. Use one of: {', '.join(transcript.EXPORT_FORMATS)}."
+        document = transcript.export_document(info, list(state.transcript))
+        if format == "json":
+            return json.dumps(document, indent=2)
+        return transcript.export_python(document)

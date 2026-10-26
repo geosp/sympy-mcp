@@ -145,6 +145,7 @@ Expression strings also know SymPy's units (`meter`, `second`, `kelvin`, …) an
 | Session Reset | `reset_state` | Clears all expressions, symbols, and functions from the session |
 | Session Inspector | `list_session_state` | Lists all stored keys in the session grouped by category |
 | Key Deletion | `delete_stored_key` | Deletes a stored item by key, searching all stores |
+| Session Export | `export_session` | Exports the session's tool calls as a replay script that checks every result, or as a JSON transcript |
 
 By default variables are predefined with assumptions (similar to how the [symbols()](https://docs.sympy.org/latest/modules/core.html#sympy.core.symbol.symbols) function works in SymPy). Unless otherwise specified the default assumptions is that a variable is complex, commutative, a term over the complex field $\mathbb{C}$.
 

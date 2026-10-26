@@ -97,5 +97,15 @@ class SymPySessionManager:
             for sid, entry in self._store.items()
         ]
 
+    def info(self, session_id: str) -> dict:
+        """session_id, description and created_at of a session (SessionNotFoundError if unknown)."""
+        self.get_sync(session_id)
+        entry = self._store[session_id]
+        return {
+            "session_id": session_id,
+            "description": entry.description,
+            "created_at": entry.created_at.isoformat(),
+        }
+
     def session_count(self) -> int:
         return len(self._store)

@@ -164,3 +164,32 @@ Delete a single stored item by key. Searches all stores (expressions, functions,
 - `key` (str): The key to delete (e.g. `"expr_2"`, `"f"`, `"R"`).
 
 **Returns:** Confirmation string on success, or an error if the key is not found.
+
+---
+
+## export_session
+Export everything computed in a session, so the work can be rerun and audited. Every tool call made in the session is recorded in order, with its arguments and the exact text it returned. The session bookkeeping tools (`create_session`, `list_sessions`, `list_session_state`, `export_session`) are not recorded.
+
+**When to use:**
+- At the end of a derivation or verification, to hand over a reproducible record
+- To rerun a verification later or on another machine, and confirm it still gives the same results
+
+**When NOT to use:**
+- To see the current values — use `list_session_state`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `format` (str, optional): `"python"` (default) for a runnable replay script, or `"json"` for the transcript.
+
+**Returns:**
+- `"python"`: a Python script. Running it with sympy-mcp installed creates a fresh session, replays every recorded call in order against an in-process server, and compares each result with the recorded one. It prints `[ok]` or `[MISMATCH]` per call and exits 0 only if everything reproduced. Use the same SymPy version for identical output; a call that hit its time limit may not time out again on another machine.
+- `"json"`: `{"format": "sympy-mcp-transcript", "format_version": 1, "exported_at", "sympy_mcp_version", "sympy_version", "session": {"session_id", "description", "created_at"}, "calls": [{"tool", "arguments", "result"} or {"tool", "arguments", "error"}, ...]}`.
+
+**Example:**
+```
+export_session(session_id="s1", format="json")
+→ {"format": "sympy-mcp-transcript", ..., "calls": [{"tool": "intro", "arguments": {"var_name": "x"}, "result": "x"}, ...]}
+
+export_session(session_id="s1")
+→ "#!/usr/bin/env python3\n\"\"\"Replay of sympy-mcp session s1. ..."
+```
