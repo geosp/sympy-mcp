@@ -31,6 +31,7 @@ def _expected_tool_count() -> int:
 def test_config_defaults():
     config = AppConfig()
     assert config.server.port == 8081
+    assert config.server.host == "0.0.0.0"  # deliberate: listen on all interfaces
     assert config.server.auth_enabled is False
     assert config.sympy.session_ttl_seconds == 1800
 

@@ -34,7 +34,7 @@ You need [uv](https://docs.astral.sh/uv/getting-started/installation/) first.
 Then clone and install:
 
 ```shell
-git clone https://github.com/sdiehl/sympy-mcp.git
+git clone https://github.com/geosp/sympy-mcp.git
 cd sympy-mcp
 uv sync
 ```
@@ -49,7 +49,7 @@ uv run sympy-mcp --mode stdio
 uv run sympy-mcp --mode http --port 8081
 ```
 
-Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`). Settings can also come from environment variables or a `.env` file: `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), `SYMPY_SESSION_TTL` (session lifetime in seconds, default `1800`), and `SYMPY_TIMEOUT` (time limit per computation in seconds, default `30`, `0` for none).
+Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`). Settings can also come from environment variables or a `.env` file: `MCP_TRANSPORT`, `MCP_HOST` (default `0.0.0.0`, all interfaces), `MCP_PORT` (default `8081`), `SYMPY_SESSION_TTL` (session lifetime in seconds, default `1800`), and `SYMPY_TIMEOUT` (time limit per computation in seconds, default `30`, `0` for none).
 
 Integration, simplification and ODE solving can run for a very long time on some inputs. Each computing tool therefore runs under a time limit and returns a timeout error instead of blocking the server; a call can override the limit with `timeout_seconds`. The limit uses `SIGALRM`, so it is enforced on Linux and macOS but not on Windows.
 
@@ -209,9 +209,9 @@ VS Code and VS Code Insiders now support MCPs in [agent mode](https://code.visua
 
 1. **One-click Setup:**
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=sympy-mcp&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-p%22%2C%228081%3A8081%22%2C%22--rm%22%2C%22ghcr.io%2Fsdiehl%2Fsympy-mcp%3Amain%22%5D%7D)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=sympy-mcp&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22--rm%22%2C%22ghcr.io%2Fgeosp%2Fsympy-mcp%3Alatest%22%2C%22uv%22%2C%22run%22%2C%22sympy-mcp%22%2C%22--mode%22%2C%22stdio%22%5D%7D)
 
-[![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=sympy-mcp&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22-p%22%2C%228081%3A8081%22%2C%22--rm%22%2C%22ghcr.io%2Fsdiehl%2Fsympy-mcp%3Amain%22%5D%7D&quality=insiders)
+[![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=sympy-mcp&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22--rm%22%2C%22ghcr.io%2Fgeosp%2Fsympy-mcp%3Alatest%22%2C%22uv%22%2C%22run%22%2C%22sympy-mcp%22%2C%22--mode%22%2C%22stdio%22%5D%7D&quality=insiders)
 
 OR manually add to your `settings.json` (global):
 
@@ -316,8 +316,8 @@ This starts `sympy-mcp`, the MCP HTTP server, on **port 8082** (`/mcp` endpoint)
 Alternatively, pull the pre-built image from GitHub Container Registry:
 
 ```bash
-docker pull ghcr.io/sdiehl/sympy-mcp:main
-docker run -p 8081:8081 --rm ghcr.io/sdiehl/sympy-mcp:main
+docker pull ghcr.io/geosp/sympy-mcp:latest
+docker run -p 8081:8081 --rm ghcr.io/geosp/sympy-mcp:latest
 ```
 
 To configure Claude Desktop to launch the Docker container directly:
