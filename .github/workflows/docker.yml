@@ -54,6 +54,21 @@ jobs:
             type=edge
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-') }}
 
+      # Build a single-platform image into the local daemon and check that the
+      # server starts, before anything is pushed
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          push: false
+          tags: sympy-mcp:ci
+          cache-from: type=gha
+          platforms: linux/amd64
+
+      - name: Smoke test (server starts, /health and MCP initialize answer)
+        run: docker/smoke-test.sh sympy-mcp:ci 8081
+
       # Build and push Docker image with Buildx
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -65,10 +80,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-
-      # Test Docker image if not pushing (PR context)
-      - name: Test Docker image
-        if: github.event_name == 'pull_request'
-        run: |
-          docker images
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }} uv run --with sympy python -c "import sympy; print(f'SymPy version: {sympy.__version__}')" 
