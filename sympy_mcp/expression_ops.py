@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 import sympy
 
 from sympy_mcp.operations import OperationError, guard, stored
+from sympy_mcp.parsing import SAFE_GLOBALS
 
 if TYPE_CHECKING:
     from sympy_mcp.state import SymPyState
@@ -19,7 +20,7 @@ def _unchanged_note(before: Any, after: Any) -> Dict[str, str]:
 @guard("rewriting expression")
 def rewrite_expression(state: "SymPyState", expr_key: str, target: str):
     expr = stored(state, expr_key)
-    function = getattr(sympy, target, None)
+    function = SAFE_GLOBALS.get(target) if not target.startswith("_") else None
     if function is None or not callable(function):
         raise OperationError(
             f"'{target}' is not a SymPy function. Use a name such as exp, cos, sin, tan, "

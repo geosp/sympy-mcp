@@ -6,6 +6,8 @@ Expression strings can refer to stored results with `@key` — for example `"@ex
 
 Computing tools return JSON by default: `{"key": ..., "result": ..., "latex": ...}`. `key` is the session key the result is stored under (pass it to later calls, or reference it as `@key` in an expression string), `result` is the value as a SymPy string, and `latex` is its LaTeX form. Some tools add extra fields, listed under Returns. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain string these tools returned before (usually just the key).
 
+Expression strings are SymPy syntax, not general Python: they may not contain `__`, lambdas or comprehensions, or attributes starting with `_`, and are limited to 10,000 characters. Quoted strings are allowed only as names, as in `Symbol('x')` or `Function('f')` — write `rewrite(exp)`, not `rewrite('exp')`.
+
 Before calling any tool, carefully read all parameter names, types, and required/optional markers in its schema. Do not guess parameter names.
 
 ---

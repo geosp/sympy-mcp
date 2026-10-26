@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 import mpmath
 import sympy
+from sympy.core.function import AppliedUndef
 from sympy.integrals.transforms import IntegralTransform
 
 from sympy_mcp.operations import OperationError, guard, stored, symbol
@@ -85,10 +86,15 @@ def numeric_integrate(
             f"The integrand has free symbols other than {var_name}: {', '.join(others)}. "
             "Substitute values for them first (e.g. with substitute_values)."
         )
+    if expr.has(AppliedUndef):
+        raise OperationError("The integrand contains undefined functions, which can't be evaluated numerically.")
+    # lambdify prints names into generated code, so integrate over a fresh dummy variable
+    dummy = sympy.Dummy("x")
+    expr = expr.subs(var, dummy)
     with mpmath.workdps(precision + 5):
         a = _mp_bound(state._parse(lower), precision)
         b = _mp_bound(state._parse(upper), precision)
-        func = sympy.lambdify(var, expr, "mpmath")
+        func = sympy.lambdify(dummy, expr, "mpmath")
         value, error = mpmath.quad(func, [a, b], error=True)
         if isinstance(value, mpmath.mpc):
             result = sympy.Float(str(value.real), precision) + sympy.I * sympy.Float(str(value.imag), precision)

@@ -280,6 +280,17 @@ A `/health` endpoint is exposed in HTTP mode, returning:
 {"status": "ok", "service": "sympy", "active_sessions": 0}
 ```
 
+## Security
+
+Expression strings are parsed by SymPy, which evaluates them as Python. The server restricts that evaluation (`sympy_mcp/parsing.py`):
+
+- **Restricted namespace.** Only SymPy's names are available: no Python builtins (`open`, `eval`, `__import__`, …), no modules, and none of SymPy's helpers that generate or evaluate code (`sympify`, `lambdify`, `nsolve`, `parse_expr`, plotting, …).
+- **Input checks.** Input is limited to 10,000 characters and may not contain `__`.
+- **Checks on the transformed code.** It may not contain lambdas, comprehensions, attributes starting with `_`, or frame and code introspection attributes such as `gi_frame` and `f_globals`. Quoted strings are allowed only as names, e.g. `Symbol('x')`.
+- **Strings built at runtime.** A string that SymPy parses during an expression, e.g. via `sin(<string>)`, goes through the same restrictions. A parse result may not contain strings.
+
+These checks close the known routes from an expression to arbitrary code, and tests cover them (`tests/test_safe_parsing.py`). But an in-process `eval` can't be proven to be a complete sandbox. Run the server with least privilege, e.g. in the provided container without secrets or write access to anything important, and put authentication in front of any HTTP deployment that others can reach.
+
 ## Running in Container
 
 You can build and run the server using Docker locally:

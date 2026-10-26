@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Literal, Any, Union
 
 import sympy
 from sympy import Eq, Function, dsolve, diff, integrate, simplify, Matrix
-from sympy.parsing.sympy_parser import parse_expr
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.function import AppliedUndef
 from sympy.solvers.pde import pdsolve
@@ -28,7 +27,7 @@ from sympy.physics.units import (
     vacuum_permittivity, avogadro_number, planck_length,
 )
 
-from sympy_mcp.parsing import parse_expression
+from sympy_mcp.parsing import parse_expression, safe_parse
 from sympy_mcp.results import StoredResult
 from sympy_mcp import expression_ops, matrix_ops, odes, quantum_ops, transform_ops, verification
 from sympy_mcp.shared.enums import (
@@ -48,6 +47,12 @@ except ImportError:
     EINSTEINPY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+# Unit and constant names for parsing target units (no submodules or private names)
+UNITS_NAMESPACE = {
+    name: value for name, value in units_dict.items()
+    if not name.startswith("_") and not isinstance(value, type(sympy))
+}
 
 
 class SymPyState:
@@ -1000,7 +1005,7 @@ class SymPyState:
                     target_unit_objs.append(units_dict[unit_str])
                 else:
                     try:
-                        unit_obj = parse_expr(unit_str, local_dict=units_dict)
+                        unit_obj = safe_parse(unit_str, UNITS_NAMESPACE)
                         target_unit_objs.append(unit_obj)
                     except Exception as e:
                         return f"Error: Unit '{unit_str}' could not be parsed: {e}"
