@@ -25,7 +25,7 @@ allow-direct-references = true
 [dependency-groups]
 dev = [
     "black>=25.1.0",
-    "pytest>=8.3.5",
+    "pytest>=9.1",
     "ruff>=0.11.10",
 ]
 relativity = [
@@ -37,4 +37,4 @@ default-groups = []
 
 [tool.pytest]
 testpaths = ["tests"]
-python_files = "test_*.py"
+python_files = ["test_*.py"]
