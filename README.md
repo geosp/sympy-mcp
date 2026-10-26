@@ -57,6 +57,8 @@ The sympy-mcp server provides the following tools for symbolic mathematics.
 
 Every computing tool stores its result in the session and returns JSON: `{"key": "expr_3", "result": "x**2 - 1", "latex": "x^{2} - 1"}`. Pass `key` to later calls (`expr_key`, `matrix_key`, …) or reference it as `@expr_3` inside any expression string, e.g. `introduce_expression("@expr_3 - @expr_5")`. Failures return `{"error": "..."}`. Pass `output_format="legacy"` to get the plain-string return values from earlier versions.
 
+Expression strings also know SymPy's units (`meter`, `second`, `kelvin`, …) and these physical constants: `speed_of_light`, `gravitational_constant`, `planck`, `hbar`, `boltzmann_constant`, `elementary_charge`, `electron_rest_mass`, `vacuum_permittivity`, `avogadro_number`, `planck_length`. Short aliases such as `c` or `k_B` are not defined, so they stay ordinary symbols.
+
 | Tool | Tool ID | Description |
 |------|-------|-------------|
 | Variable Introduction | `intro` | Introduces a variable with specified assumptions and stores it |

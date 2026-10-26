@@ -8,6 +8,8 @@ Before calling any tool, carefully read all parameter names, types, and required
 
 Pre-loaded units available in all sessions: `meter`, `second`, `kilogram`, `ampere`, `kelvin`, `mole`, `candela`, `kilometer`, `millimeter`, `gram`, `joule`, `newton`, `pascal`, `watt`, `coulomb`, `volt`, `ohm`, `farad`, `henry`, `speed_of_light`, `gravitational_constant`, `planck`, `day`, `year`, `minute`, `hour`.
 
+Pre-loaded physical constants: `hbar`, `boltzmann_constant`, `elementary_charge`, `electron_rest_mass`, `vacuum_permittivity`, `avogadro_number`, `planck_length` (with SymPy's SI values). Short aliases such as `c`, `k_B` or `me` are deliberately **not** defined, so they stay ordinary symbols: write `speed_of_light`, `boltzmann_constant`, `electron_rest_mass`. To use one of the constant names as a plain symbol instead, introduce it with `intro` (e.g. `intro(var_name="hbar")`), which replaces the constant in that session.
+
 ---
 
 ## convert_to_units

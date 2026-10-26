@@ -24,6 +24,8 @@ from sympy.physics.units import (
     kilometer, millimeter, gram, joule, newton, pascal, watt,
     coulomb, volt, ohm, farad, henry, speed_of_light,
     gravitational_constant, planck, day, year, minute, hour,
+    hbar, boltzmann_constant, elementary_charge, electron_rest_mass,
+    vacuum_permittivity, avogadro_number, planck_length,
 )
 
 from sympy_mcp.parsing import parse_expression
@@ -180,6 +182,12 @@ class SymPyState:
             "henry": henry, "speed_of_light": speed_of_light,
             "gravitational_constant": gravitational_constant,
             "planck": planck, "day": day, "year": year, "minute": minute, "hour": hour,
+            # Physical constants. Only the long SymPy names: short aliases such
+            # as c or me would turn a user's plain symbol into a constant.
+            "hbar": hbar, "boltzmann_constant": boltzmann_constant,
+            "elementary_charge": elementary_charge, "electron_rest_mass": electron_rest_mass,
+            "vacuum_permittivity": vacuum_permittivity, "avogadro_number": avogadro_number,
+            "planck_length": planck_length,
         }
         for name, unit in unit_vars.items():
             if unit is not None:
