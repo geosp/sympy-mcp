@@ -79,3 +79,28 @@ def test_session_round_trip():
 
     result = asyncio.run(run())
     assert result.data == "x"
+
+
+@pytest.mark.parametrize(
+    "env, argv, expected",
+    [
+        ({}, [], "stdio"),
+        ({"MCP_TRANSPORT": "http"}, [], "http"),  # honoured since mcp-service-kit 0.2.1
+        ({"MCP_TRANSPORT": "http"}, ["--mode", "stdio"], "stdio"),  # --mode wins
+        ({}, ["--mode", "http"], "http"),
+    ],
+)
+def test_main_selects_transport(monkeypatch, env, argv, expected):
+    from sympy_mcp import server
+
+    # main() writes these into os.environ; setenv first so monkeypatch restores them afterwards
+    for name in ("MCP_TRANSPORT", "MCP_HOST", "MCP_PORT", "MCP_AUTH_ENABLED", "LOG_LEVEL"):
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setattr("sys.argv", ["sympy-mcp", *argv])
+    started = []
+    monkeypatch.setattr(server.SymPyMCPServer, "run", lambda self: started.append(self.config.transport))
+    server.main()
+    assert started == [expected]
