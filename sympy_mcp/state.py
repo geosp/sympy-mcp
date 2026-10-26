@@ -28,7 +28,7 @@ from sympy.physics.units import (
 
 from sympy_mcp.parsing import parse_expression
 from sympy_mcp.results import StoredResult
-from sympy_mcp import expression_ops, odes, transform_ops, verification
+from sympy_mcp import expression_ops, matrix_ops, odes, quantum_ops, transform_ops, verification
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
 )
@@ -103,7 +103,7 @@ class SymPyState:
         return key
 
     def _parse_dict(self) -> Dict[str, Any]:
-        return {**self.local_vars, **self.functions}
+        return {**quantum_ops.NAMESPACE, **self.local_vars, **self.functions}
 
     def _parse(self, text: str, evaluate: bool = True, extra: Optional[Dict[str, Any]] = None) -> Any:
         """Parse an expression string with the session namespace and `@key` references."""
@@ -1103,6 +1103,54 @@ class SymPyState:
             return self._result(result_key)
         except Exception as e:
             return f"Error calculating eigenvectors: {e}"
+
+    # More matrix operations (logic in sympy_mcp/matrix_ops.py)
+
+    def matrix_multiply(self, a_key: str, b_key: str) -> str:
+        return matrix_ops.multiply(self, a_key, b_key)
+
+    def matrix_power(self, matrix_key: str, exponent: str) -> str:
+        return matrix_ops.power(self, matrix_key, exponent)
+
+    def matrix_exp(self, matrix_key: str) -> str:
+        return matrix_ops.exponential(self, matrix_key)
+
+    def matrix_trace(self, matrix_key: str) -> str:
+        return matrix_ops.trace(self, matrix_key)
+
+    def matrix_transpose(self, matrix_key: str) -> str:
+        return matrix_ops.transpose(self, matrix_key)
+
+    def matrix_adjoint(self, matrix_key: str) -> str:
+        return matrix_ops.adjoint(self, matrix_key)
+
+    def matrix_commutator(self, a_key: str, b_key: str) -> str:
+        return matrix_ops.commutator(self, a_key, b_key)
+
+    def matrix_rank(self, matrix_key: str) -> str:
+        return matrix_ops.rank(self, matrix_key)
+
+    def matrix_nullspace(self, matrix_key: str) -> str:
+        return matrix_ops.nullspace(self, matrix_key)
+
+    # ------------------------------------------------------------------
+    # Quantum operators (logic in sympy_mcp/quantum_ops.py)
+    # ------------------------------------------------------------------
+
+    def introduce_boson_operator(self, name: str) -> str:
+        return quantum_ops.introduce_boson_operator(self, name)
+
+    def normal_order_expression(self, expr_key: str, mode: str = "symbol") -> str:
+        return quantum_ops.normal_order_expression(self, expr_key, mode)
+
+    def evaluate_commutator(self, expr_a: str, expr_b: str) -> str:
+        return quantum_ops.evaluate_commutator(self, expr_a, expr_b)
+
+    def quantum_apply(self, expr_key: str) -> str:
+        return quantum_ops.quantum_apply(self, expr_key)
+
+    def coherent_state_expectation(self, expr_key: str, operator_name: str, alpha: str) -> str:
+        return quantum_ops.coherent_state_expectation(self, expr_key, operator_name, alpha)
 
     # ------------------------------------------------------------------
     # Relativity (einsteinpy)

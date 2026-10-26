@@ -146,3 +146,230 @@ Calculates the eigenvectors of a square matrix.
 matrix_eigenvectors(session_id="s1", matrix_key="matrix_0")
 → {"key": "expr_0", "result": "[(-1, 1, [Matrix([[-1], [1]])]), (3, 1, [Matrix([[1], [1]])])]", "latex": "..."}
 ```
+
+---
+
+## matrix_multiply
+Multiply two stored matrices: `A·B`.
+
+**When to use:**
+- To compose linear maps or apply a matrix to a column vector
+
+**When NOT to use:**
+- For element-wise products — build the result with `create_matrix` and `@key` references
+- For powers of one matrix — use `matrix_power`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `a_key` (str): Session key of the left matrix `A`.
+- `b_key` (str): Session key of the right matrix `B`. Its row count must equal the column count of `A`.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the product.
+
+**Example:**
+```
+matrix_multiply(session_id="s1", a_key="matrix_0", b_key="matrix_1")   # [[1, 2], [3, 4]] · [[0, 1], [1, 0]]
+→ {"key": "matrix_2", "result": "Matrix([[2, 1], [4, 3]])", "latex": "..."}
+```
+
+---
+
+## matrix_power
+Raise a square matrix to a power. The exponent may be symbolic, e.g. an integer symbol `n`, when SymPy can compute it via the Jordan form.
+
+**When to use:**
+- For `A^n` with a fixed or symbolic integer `n`
+- For negative powers of an invertible matrix
+
+**When NOT to use:**
+- For `exp(A)` — use `matrix_exp`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `exponent` (str): The power as an expression string, e.g. `"3"`, `"-1"`, `"n"`.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the power.
+
+**Example:**
+```
+matrix_power(session_id="s1", matrix_key="matrix_0", exponent="n")   # [[1, 1], [0, 1]], n a positive integer
+→ {"key": "matrix_1", "result": "Matrix([[1, n], [0, 1]])", "latex": "..."}
+```
+
+---
+
+## matrix_exp
+Matrix exponential `exp(A)` of a square matrix.
+
+**When to use:**
+- To solve linear ODE systems `x' = A x` (`x(t) = exp(A t) x(0)`)
+- To build rotations, boosts and unitary time evolution from generators
+
+**When NOT to use:**
+- For element-wise exponentials
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of `exp(A)`.
+
+**Example:**
+```
+matrix_exp(session_id="s1", matrix_key="matrix_0")   # [[0, theta], [-theta, 0]]
+→ {"key": "matrix_1", "result": "Matrix([[cos(theta), sin(theta)], [-sin(theta), cos(theta)]])", "latex": "..."}
+```
+
+---
+
+## matrix_trace
+Trace (sum of the diagonal) of a square matrix.
+
+**When to use:**
+- For invariants such as `tr(A)`, or `tr(ρ)` for a density matrix
+
+**When NOT to use:**
+- For non-square matrices — the trace is undefined
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the trace.
+
+**Example:**
+```
+matrix_trace(session_id="s1", matrix_key="matrix_0")   # [[1, 2], [2, 4]]
+→ {"key": "expr_1", "result": "5", "latex": "5"}
+```
+
+---
+
+## matrix_transpose
+Transpose of a matrix, `Aᵀ`.
+
+**When to use:**
+- To turn rows into columns, or to check symmetry against `check_equivalence`
+
+**When NOT to use:**
+- For the conjugate transpose of a complex matrix — use `matrix_adjoint`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the transpose.
+
+**Example:**
+```
+matrix_transpose(session_id="s1", matrix_key="matrix_0")   # [[1, 2, 3]]
+→ {"key": "matrix_1", "result": "Matrix([[1], [2], [3]])", "latex": "..."}
+```
+
+---
+
+## matrix_adjoint
+Hermitian adjoint (conjugate transpose) `A†` of a matrix. This is **not** the classical adjugate (matrix of cofactors).
+
+**When to use:**
+- To check whether a matrix is Hermitian or unitary
+- For quantum-mechanical operators in a finite basis
+
+**When NOT to use:**
+- For the plain transpose — use `matrix_transpose`
+- For the inverse — use `matrix_inverse`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of `A†`.
+
+**Example:**
+```
+matrix_adjoint(session_id="s1", matrix_key="matrix_0")   # [[1, I], [0, 2]]
+→ {"key": "matrix_1", "result": "Matrix([[1, 0], [-I, 2]])", "latex": "..."}
+```
+
+---
+
+## matrix_commutator
+Commutator `[A, B] = A·B - B·A` of two square matrices of the same size.
+
+**When to use:**
+- For Lie-algebra relations such as `[σx, σy] = 2i σz`
+- To check whether two operators commute
+
+**When NOT to use:**
+- For abstract operators (e.g. bosonic `a`, `a†`) — use `evaluate_commutator`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `a_key` (str): Session key of `A`.
+- `b_key` (str): Session key of `B`.
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the commutator.
+
+**Example:**
+```
+matrix_commutator(session_id="s1", a_key="matrix_0", b_key="matrix_1")   # Pauli σx, σy
+→ {"key": "matrix_2", "result": "Matrix([[2*I, 0], [0, -2*I]])", "latex": "..."}
+```
+
+---
+
+## matrix_rank
+Rank of a matrix (the number of linearly independent rows or columns).
+
+**When to use:**
+- To check whether a system of linear equations is degenerate
+- To find the dimension of the image of a linear map
+
+**When NOT to use:**
+- To get the null vectors themselves — use `matrix_nullspace`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the rank.
+
+**Example:**
+```
+matrix_rank(session_id="s1", matrix_key="matrix_0")   # [[1, 2], [2, 4]]
+→ {"key": "expr_1", "result": "1", "latex": "1"}
+```
+
+---
+
+## matrix_nullspace
+Basis of the nullspace (kernel) of a matrix: the vectors `v` with `A·v = 0`.
+
+**When to use:**
+- To find the solutions of a homogeneous linear system
+- To find eigenvectors of a known eigenvalue λ, as the nullspace of `A - λI`
+
+**When NOT to use:**
+- For the inhomogeneous system `A·x = b` — use `solve_linear_system`
+
+**Parameters:**
+- `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
+- `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
+
+**Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the list of basis column vectors; `dimension` — how many there are.
+
+**Example:**
+```
+matrix_nullspace(session_id="s1", matrix_key="matrix_0")   # [[1, 2], [2, 4]]
+→ {"key": "expr_1", "result": "[Matrix([[-2], [1]])]", "latex": "...", "dimension": 1}
+```

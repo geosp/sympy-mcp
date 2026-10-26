@@ -65,3 +65,132 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
         return format_output(state.matrix_eigenvectors(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_multiply"))
+    async def matrix_multiply(
+        session_id: str,
+        a_key: str,
+        b_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Multiply two stored matrices (A times B)."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_multiply(a_key, b_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_power"))
+    async def matrix_power(
+        session_id: str,
+        matrix_key: str,
+        exponent: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Raise a square matrix to a power, which may be symbolic."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_power(matrix_key, exponent), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_exp"))
+    async def matrix_exp(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Matrix exponential exp(A)."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_exp(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_trace"))
+    async def matrix_trace(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Trace of a square matrix."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_trace(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_transpose"))
+    async def matrix_transpose(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Transpose of a matrix."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_transpose(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_adjoint"))
+    async def matrix_adjoint(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Conjugate transpose (Hermitian adjoint) of a matrix."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_adjoint(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_commutator"))
+    async def matrix_commutator(
+        session_id: str,
+        a_key: str,
+        b_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Commutator AB - BA of two square matrices."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_commutator(a_key, b_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_rank"))
+    async def matrix_rank(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Rank of a matrix."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_rank(matrix_key), output_format)
+
+    @mcp.tool()
+    @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "matrix_nullspace"))
+    async def matrix_nullspace(
+        session_id: str,
+        matrix_key: str,
+        output_format: str = "structured",
+    ) -> str:
+        """Basis of the nullspace of a matrix."""
+        try:
+            state = session_manager.get_sync(session_id)
+        except SessionNotFoundError as e:
+            return format_output(str(e), output_format)
+        return format_output(state.matrix_nullspace(matrix_key), output_format)

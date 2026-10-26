@@ -24,6 +24,9 @@ COMPUTING_TOOLS = {
     "killing_equation", "fourier_transform", "inverse_fourier_transform", "laplace_transform",
     "inverse_laplace_transform", "numeric_integrate", "rewrite_expression", "expand_log_expression",
     "trigsimp_expression", "powsimp_expression", "nsimplify_expression", "substitute_values",
+    "matrix_multiply", "matrix_power", "matrix_exp", "matrix_trace", "matrix_transpose",
+    "matrix_adjoint", "matrix_commutator", "matrix_rank", "matrix_nullspace",
+    "normal_order_expression", "evaluate_commutator", "quantum_apply", "coherent_state_expectation",
 }
 
 

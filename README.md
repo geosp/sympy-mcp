@@ -101,6 +101,20 @@ Every computing tool stores its result in the session and returns JSON: `{"key":
 | Matrix Inverse | `matrix_inverse` | Calculates the inverse of a matrix |
 | Eigenvalues | `matrix_eigenvalues` | Calculates the eigenvalues of a matrix |
 | Eigenvectors | `matrix_eigenvectors` | Calculates the eigenvectors of a matrix |
+| Matrix Product | `matrix_multiply` | Multiplies two stored matrices |
+| Matrix Power | `matrix_power` | Raises a square matrix to a (possibly symbolic) power |
+| Matrix Exponential | `matrix_exp` | Computes exp(A) |
+| Trace | `matrix_trace` | Trace of a square matrix |
+| Transpose | `matrix_transpose` | Transpose of a matrix |
+| Hermitian Adjoint | `matrix_adjoint` | Conjugate transpose A† |
+| Matrix Commutator | `matrix_commutator` | AB − BA for two square matrices |
+| Rank | `matrix_rank` | Rank of a matrix |
+| Nullspace | `matrix_nullspace` | Basis of the nullspace |
+| Boson Operator | `introduce_boson_operator` | Introduces a bosonic annihilation operator a (creation operator Dagger(a)) |
+| Normal Ordering | `normal_order_expression` | Normal-orders an operator expression, as the :X: symbol or using [a, a†] = 1 |
+| Operator Commutator | `evaluate_commutator` | Evaluates [A, B] for ladder-operator expressions |
+| Apply Operators | `quantum_apply` | Applies operators to kets and bras (qapply) |
+| Coherent Expectation | `coherent_state_expectation` | ⟨α\|X\|α⟩ for a coherent state, via normal ordering |
 | Unit Converter | `convert_to_units` | Converts a quantity to given target units |
 | Unit Simplifier | `quantity_simplify_units` | Simplifies a quantity with units |
 | Coordinates | `create_coordinate_system` | Creates a 3D coordinate system for vector calculus operations |
