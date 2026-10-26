@@ -1,4 +1,3 @@
-import pytest
 from sympy_mcp.state import SymPyState
 from sympy_mcp.shared.enums import Assumption, Domain, ODEHint
 

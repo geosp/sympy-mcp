@@ -5,7 +5,6 @@ from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
-from sympy_mcp.shared.enums import Assumption
 
 logger = logging.getLogger(__name__)
 
