@@ -1,2 +1,7 @@
 """SymPy MCP Server package."""
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("sympy-mcp")
+except PackageNotFoundError:  # running from a source tree without install
+    __version__ = "0.0.0"

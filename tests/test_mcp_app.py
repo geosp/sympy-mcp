@@ -105,3 +105,24 @@ def test_main_selects_transport(monkeypatch, env, argv, expected):
     monkeypatch.setattr(server.SymPyMCPServer, "run", lambda self: started.append(self.config.transport))
     server.main()
     assert started == [expected]
+
+
+def test_version_has_a_single_source():
+    from importlib.metadata import version
+
+    import sympy_mcp
+
+    config = AppConfig()
+    server = SymPyMCPServer(config.server, create_service(config))
+    assert server.service_version == sympy_mcp.__version__ == version("sympy-mcp")
+    assert sympy_mcp.__version__ != "0.1.0"  # now derived from git tags (>= v1.0.9)
+
+
+def test_initialize_reports_the_package_version():
+    import sympy_mcp
+
+    async def run():
+        async with Client(_create_mcp()) as client:
+            return client.server_info.version
+
+    assert asyncio.run(run()) == sympy_mcp.__version__

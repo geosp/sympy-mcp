@@ -4,7 +4,7 @@ SymPy MCP Server - extends BaseMCPServer from mcp-service-kit.
 
 from mcp_service_kit import BaseMCPServer, create_main_with_modes
 
-from sympy_mcp import timeouts
+from sympy_mcp import __version__, timeouts
 from sympy_mcp.config import AppConfig
 from sympy_mcp.service import SymPyMCPService
 from sympy_mcp.session import SymPySessionManager
@@ -28,7 +28,7 @@ class SymPyMCPServer(BaseMCPServer):
 
     @property
     def service_version(self) -> str:
-        return "0.1.0"
+        return __version__
 
     def create_middleware(self) -> list:
         # Records each session's tool calls for export_session

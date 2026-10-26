@@ -18,6 +18,11 @@ ENV PATH="/root/.local/bin/:$PATH"
 COPY pyproject.toml uv.lock README.md ./
 COPY sympy_mcp/ ./sympy_mcp/
 
+# The version normally comes from git tags, but .git is not copied into the image,
+# so CI passes it in (docker build --build-arg VERSION=...)
+ARG VERSION=0.0.0
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=${VERSION}
+
 # Pre-install all dependencies at build time (no installs at container startup)
 RUN uv sync --frozen --no-dev
 

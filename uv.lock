@@ -1636,7 +1636,6 @@ wheels = [
 
 [[package]]
 name = "sympy-mcp"
-version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "einsteinpy" },
