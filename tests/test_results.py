@@ -19,7 +19,9 @@ COMPUTING_TOOLS = {
     "calculate_curl", "calculate_divergence", "calculate_gradient", "convert_to_units",
     "quantity_simplify_units", "create_matrix", "matrix_determinant", "matrix_inverse",
     "matrix_eigenvalues", "matrix_eigenvectors", "create_predefined_metric", "calculate_tensor",
-    "create_custom_metric",
+    "create_custom_metric", "create_tensor", "covariant_derivative", "tensor_divergence",
+    "contract_indices", "raise_index", "lower_index", "tensor_component", "kretschmann_scalar",
+    "killing_equation",
 }
 
 

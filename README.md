@@ -102,6 +102,15 @@ Every computing tool stores its result in the session and returns JSON: `{"key":
 | Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Christoffel symbols, Riemann, Ricci, Schouten, Einstein, Weyl tensors) |
 | Custom Metric | `create_custom_metric` | Creates a custom metric tensor from provided components and symbols |
 | Tensor LaTeX | `print_latex_tensor` | Prints a stored tensor expression in LaTeX format |
+| Tensor Creator | `create_tensor` | Creates a vector or tensor field from components in a stored metric's coordinates |
+| Covariant Derivative | `covariant_derivative` | Covariant derivative of a stored tensor (derivative index appended last) |
+| Tensor Divergence | `tensor_divergence` | Divergence on one index, e.g. ∇^a G_ab, raising the index if needed |
+| Index Contraction | `contract_indices` | Contracts two indices of a stored tensor (traces, scalars) |
+| Raise Index | `raise_index` | Raises one index with the inverse metric |
+| Lower Index | `lower_index` | Lowers one index with the metric |
+| Tensor Component | `tensor_component` | Stores one component (by position or coordinate name) as an expression |
+| Kretschmann Scalar | `kretschmann_scalar` | Computes R_abcd R^abcd for a stored metric |
+| Killing Equation | `killing_equation` | Evaluates ∇_(a ξ_b) for a vector field and reports whether it is a Killing vector |
 | Session Creator | `create_session` | Creates a new isolated session and returns a unique session_id |
 | Session Lister | `list_sessions` | Lists all active sessions with their descriptions and timestamps |
 | Session Reset | `reset_state` | Clears all expressions, symbols, and functions from the session |

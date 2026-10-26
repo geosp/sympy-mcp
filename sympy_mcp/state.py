@@ -1221,6 +1221,44 @@ class SymPyState:
         except Exception as e:
             return f"Error creating custom metric: {e}"
 
+    # Tensor calculus on stored metrics (logic in sympy_mcp/tensor_ops.py)
+
+    def create_tensor(self, metric_key: str, components: Any, config: str) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.create_tensor(self, metric_key, components, config)
+
+    def covariant_derivative(self, tensor_key: str, metric_key: Optional[str] = None, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.covariant_derivative(self, tensor_key, metric_key, simplify_result)
+
+    def tensor_divergence(self, tensor_key: str, index: int = 0, metric_key: Optional[str] = None, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.divergence(self, tensor_key, index, metric_key, simplify_result)
+
+    def contract_indices(self, tensor_key: str, index_a: int, index_b: int, metric_key: Optional[str] = None, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.contract(self, tensor_key, index_a, index_b, metric_key, simplify_result)
+
+    def raise_index(self, tensor_key: str, index: int, metric_key: Optional[str] = None, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.change_index(self, tensor_key, index, "u", metric_key, simplify_result)
+
+    def lower_index(self, tensor_key: str, index: int, metric_key: Optional[str] = None, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.change_index(self, tensor_key, index, "l", metric_key, simplify_result)
+
+    def tensor_component(self, tensor_key: str, indices: List[Union[int, str]], simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.tensor_component(self, tensor_key, indices, simplify_result)
+
+    def kretschmann_scalar(self, metric_key: str, simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.kretschmann_scalar(self, metric_key, simplify_result)
+
+    def killing_equation(self, metric_key: str, vector: List[str], vector_config: str = "u", simplify_result: bool = True) -> str:
+        from sympy_mcp import tensor_ops
+        return tensor_ops.killing_equation(self, metric_key, vector, vector_config, simplify_result)
+
     def print_latex_tensor(self, tensor_key: str) -> str:
         if tensor_key not in self.expressions:
             return f"Error: Tensor key '{tensor_key}' not found."
