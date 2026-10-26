@@ -4,7 +4,8 @@ from typing import Optional
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
-from sympy_mcp.results import format_output
+from sympy_mcp.results import format_output, run_tool
+from sympy_mcp.timeouts import run_limited
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -13,13 +14,13 @@ logger = logging.getLogger(__name__)
 def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "simplify_expression"))
-    async def simplify_expression(session_id: str, expr_key: str, output_format: str = "structured") -> str:
+    async def simplify_expression(session_id: str, expr_key: str, timeout_seconds: Optional[float] = None, output_format: str = "structured") -> str:
         """Simplify a symbolic expression."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.simplify_expression(expr_key), output_format)
+        return run_tool(lambda: state.simplify_expression(expr_key), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "integrate_expression"))
@@ -29,6 +30,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         var_name: str,
         lower_bound: Optional[str] = None,
         upper_bound: Optional[str] = None,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Integrate an expression with respect to a variable."""
@@ -36,7 +38,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.integrate_expression(expr_key, var_name, lower_bound, upper_bound), output_format)
+        return run_tool(lambda: state.integrate_expression(expr_key, var_name, lower_bound, upper_bound), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "differentiate_expression"))
@@ -45,6 +47,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         var_name: str,
         order: int = 1,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Differentiate an expression with respect to a variable."""
@@ -52,7 +55,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.differentiate_expression(expr_key, var_name, order), output_format)
+        return run_tool(lambda: state.differentiate_expression(expr_key, var_name, order), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "limit_expression"))
@@ -62,6 +65,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         var_name: str,
         point: str,
         direction: str = "+",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Compute the limit of an expression as a variable approaches a point."""
@@ -69,7 +73,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.limit_expression(expr_key, var_name, point, direction), output_format)
+        return run_tool(lambda: state.limit_expression(expr_key, var_name, point, direction), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "series_expansion"))
@@ -79,6 +83,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         var_name: str,
         point: str = "0",
         order: int = 6,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Compute the Taylor/Maclaurin series expansion of an expression."""
@@ -86,7 +91,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        raw = state.series_expansion(expr_key, var_name, point, order)
+        raw = run_limited(lambda: state.series_expansion(expr_key, var_name, point, order), timeout_seconds)
         if output_format != "legacy" or raw.startswith("Error"):
             return format_output(raw, output_format)
         key, display = raw.split("|||", 1)
@@ -100,6 +105,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         var_name: str,
         lower_bound: str,
         upper_bound: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Compute a symbolic summation over a variable range."""
@@ -107,7 +113,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.summation_expression(expr_key, var_name, lower_bound, upper_bound), output_format)
+        return run_tool(lambda: state.summation_expression(expr_key, var_name, lower_bound, upper_bound), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "fourier_transform"))
@@ -116,6 +122,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         var_name: str,
         k_name: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Fourier transform F(k) = integral of f(x) exp(-2 pi i x k) dx."""
@@ -123,7 +130,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.fourier_transform(expr_key, var_name, k_name), output_format)
+        return run_tool(lambda: state.fourier_transform(expr_key, var_name, k_name), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "inverse_fourier_transform"))
@@ -132,6 +139,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         k_name: str,
         var_name: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Inverse Fourier transform (SymPy convention)."""
@@ -139,7 +147,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.inverse_fourier_transform(expr_key, k_name, var_name), output_format)
+        return run_tool(lambda: state.inverse_fourier_transform(expr_key, k_name, var_name), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "laplace_transform"))
@@ -148,6 +156,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         t_name: str,
         s_name: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Laplace transform F(s) = integral from 0 to oo of f(t) exp(-s t) dt."""
@@ -155,7 +164,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.laplace_transform(expr_key, t_name, s_name), output_format)
+        return run_tool(lambda: state.laplace_transform(expr_key, t_name, s_name), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "inverse_laplace_transform"))
@@ -164,6 +173,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         s_name: str,
         t_name: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Inverse Laplace transform."""
@@ -171,7 +181,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.inverse_laplace_transform(expr_key, s_name, t_name), output_format)
+        return run_tool(lambda: state.inverse_laplace_transform(expr_key, s_name, t_name), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "numeric_integrate"))
@@ -182,6 +192,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         lower_bound: str,
         upper_bound: str,
         precision: int = 15,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Numeric definite integral with mpmath quadrature at a chosen precision."""
@@ -189,4 +200,4 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.numeric_integrate(expr_key, var_name, lower_bound, upper_bound, precision), output_format)
+        return run_tool(lambda: state.numeric_integrate(expr_key, var_name, lower_bound, upper_bound, precision), output_format, timeout_seconds)

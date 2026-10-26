@@ -1,9 +1,10 @@
 """MCP tools for bosonic quantum operators."""
 import logging
+from typing import Optional
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
-from sympy_mcp.results import format_output
+from sympy_mcp.results import format_output, run_tool
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         session_id: str,
         expr_key: str,
         mode: str = "symbol",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Normal-order an operator expression."""
@@ -36,7 +38,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.normal_order_expression(expr_key, mode), output_format)
+        return run_tool(lambda: state.normal_order_expression(expr_key, mode), output_format, timeout_seconds)
 
 
     @mcp.tool()
@@ -45,6 +47,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         session_id: str,
         expr_a: str,
         expr_b: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Evaluate the commutator [A, B] of two operator expressions."""
@@ -52,7 +55,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.evaluate_commutator(expr_a, expr_b), output_format)
+        return run_tool(lambda: state.evaluate_commutator(expr_a, expr_b), output_format, timeout_seconds)
 
 
     @mcp.tool()
@@ -60,6 +63,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
     async def quantum_apply(
         session_id: str,
         expr_key: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Apply operators to the kets and bras in an expression (qapply)."""
@@ -67,7 +71,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.quantum_apply(expr_key), output_format)
+        return run_tool(lambda: state.quantum_apply(expr_key), output_format, timeout_seconds)
 
 
     @mcp.tool()
@@ -77,6 +81,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         operator_name: str,
         alpha: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Expectation value of an operator expression in a coherent state."""
@@ -84,4 +89,4 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.coherent_state_expectation(expr_key, operator_name, alpha), output_format)
+        return run_tool(lambda: state.coherent_state_expectation(expr_key, operator_name, alpha), output_format, timeout_seconds)

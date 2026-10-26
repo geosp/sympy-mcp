@@ -51,6 +51,7 @@ Solve an ordinary differential equation.
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): ODE solver hint. Default: `"default"`.
 - `ics` (dict[str, str], optional): Initial conditions, mapping a condition to its value. Keys are `"f(0)"` for a value, `"f'(0)"` / `"f''(0)"` for derivatives (the independent variable is taken from the equation), or any expression such as `"f(x).diff(x).subs(x, 0)"`. Values are expression strings and may use `@key` references. Example: `{"theta(0)": "0"}`. Default: none (general solution with constants `C1`, `C2`, …).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON with
@@ -88,6 +89,7 @@ Solve a coupled system of ordinary differential equations.
 - `expr_keys` (list[str]): Session keys of the ODE expressions (each should equal 0 or be an `Eq`).
 - `func_names` (list[str]): Names of the functions to solve for (each must be introduced with `introduce_function`).
 - `ics` (dict[str, str], optional): Initial conditions, in the same form as for `dsolve_ode`, e.g. `{"f(0)": "0", "g(0)": "1"}`. Default: none.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the list of solution equations, one per function; `key` — session key the list is stored under; `latex` — the list in LaTeX; `rhs_keys` — a map from function name to the session key of its explicit right-hand side. With `output_format="legacy"`: comma-separated LaTeX solutions only.
@@ -117,6 +119,7 @@ Check that a solution satisfies an ODE or a system of ODEs by substituting it ba
 - `expr_key` (str, optional): Session key of the ODE, for a single equation.
 - `expr_keys` (list[str], optional): Session keys of the ODEs, for a system. Pass exactly one of `expr_key` and `expr_keys`.
 - `func_name` (str, optional): The function solved for. Required when `solution_key` is a bare right-hand side rather than an equation.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 
 **Returns:** JSON `{"verified": true|false, "residual": "..."}`. `residual` is what remains after substituting the solution (`"0"` when verified). For a system: `residuals`, one per equation. For a solution with several branches: `branches`, each with its own `verified` and `residual`.
 
@@ -147,6 +150,7 @@ Solve a partial differential equation.
 - `expr_key` (str): Session key of the PDE expression.
 - `func_name` (str): Name of the function to solve for (must be introduced with `introduce_function`).
 - `hint` (str, optional): PDE solver hint. Default: `"default"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the solution as an equation; `key` — session key the solution is stored under; `latex` — the solution in LaTeX. With `output_format="legacy"`: the LaTeX string only.

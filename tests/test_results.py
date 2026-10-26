@@ -196,3 +196,6 @@ class TestToolOutput:
         for name in COMPUTING_TOOLS:
             schema = tools[name].input_schema["properties"]
             assert schema["output_format"]["default"] == "structured", name
+            assert "timeout_seconds" in schema, name
+        for name in ("check_equivalence", "verify_ode_solution"):
+            assert "timeout_seconds" in tools[name].input_schema["properties"], name

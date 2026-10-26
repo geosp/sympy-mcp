@@ -25,6 +25,7 @@ Simplifies a symbolic expression using SymPy's `simplify` function.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key from a previous call's `key` field.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the simplified expression as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -55,6 +56,7 @@ Integrates an expression with respect to a variable. Supports indefinite and def
 - `var_name` (str): Variable to integrate with respect to (must be introduced in the session).
 - `lower_bound` (str, optional): Lower bound for definite integration (e.g., `"0"`, `"pi"`).
 - `upper_bound` (str, optional): Upper bound for definite integration (e.g., `"1"`, `"oo"`).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the integral as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -94,6 +96,7 @@ Differentiates an expression with respect to a variable, optionally to a specifi
 - `expr_key` (str): Session key of the expression to differentiate.
 - `var_name` (str): Variable to differentiate with respect to (must be introduced in the session).
 - `order` (int, optional): Order of differentiation. Default: `1`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the derivative as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -125,6 +128,7 @@ Compute the limit of an expression as a variable approaches a point.
 - `var_name` (str): Variable approaching the limit point (must be introduced in the session).
 - `point` (str): The limit point as a SymPy expression string (e.g. `"0"`, `"oo"`, `"pi/2"`).
 - `direction` (str, optional): `"+"` for right-hand limit, `"-"` for left-hand limit. Default: `"+"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the limit value; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -157,6 +161,7 @@ Compute the Taylor/Maclaurin series expansion of an expression around a point.
 - `var_name` (str): Variable to expand in (must be introduced in the session).
 - `point` (str, optional): Expansion point. Default: `"0"` (Maclaurin series).
 - `order` (int, optional): Number of terms (truncation order). Default: `6`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON with
@@ -193,6 +198,7 @@ Compute a symbolic or numerical summation over a variable range.
 - `var_name` (str): Summation variable (must be introduced in the session).
 - `lower_bound` (str): Lower bound as a SymPy expression string (e.g. `"1"`, `"0"`).
 - `upper_bound` (str): Upper bound as a SymPy expression string (e.g. `"n"`, `"oo"`, `"10"`).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the closed-form sum; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -225,6 +231,7 @@ Compute the Fourier transform with SymPy's convention `F(k) = ∫ f(x) e^{-2πi 
 - `expr_key` (str): Session key of `f(x)`.
 - `var_name` (str): The variable `x` (an introduced symbol).
 - `k_name` (str): The frequency variable `k` (an introduced symbol).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of `F(k)`. If SymPy cannot evaluate the transform, the result is an unevaluated `FourierTransform(...)` and a `note` says so.
@@ -252,6 +259,7 @@ Compute the inverse Fourier transform `f(x) = ∫ F(k) e^{2πi x k} dk` (SymPy's
 - `expr_key` (str): Session key of `F(k)`.
 - `k_name` (str): The frequency variable `k`.
 - `var_name` (str): The variable `x` of the result.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of `f(x)`, with a `note` if SymPy could not evaluate it.
@@ -279,6 +287,7 @@ Compute the Laplace transform `F(s) = ∫_0^∞ f(t) e^{-st} dt`.
 - `expr_key` (str): Session key of `f(t)`.
 - `t_name` (str): The time variable `t`.
 - `s_name` (str): The transform variable `s`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of `F(s)`; `convergence_abscissa` — the transform converges for `Re(s)` greater than this; `conditions` — any extra conditions SymPy reports. If SymPy cannot evaluate the transform, the result is unevaluated and a `note` says so.
@@ -305,6 +314,7 @@ Compute the inverse Laplace transform. The result is multiplied by `Heaviside(t)
 - `expr_key` (str): Session key of `F(s)`.
 - `s_name` (str): The transform variable `s`.
 - `t_name` (str): The time variable `t` of the result.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of `f(t)`, with a `note` if SymPy could not evaluate it.
@@ -336,6 +346,7 @@ Evaluate a definite integral numerically with mpmath quadrature (tanh-sinh / Gau
 - `lower_bound` (str): Lower limit, e.g. `"0"`, `"-oo"`, `"pi/2"`, `"@expr_3"`.
 - `upper_bound` (str): Upper limit, e.g. `"1"`, `"oo"`.
 - `precision` (int, optional): Number of significant digits, 1–1000. Default: `15`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of the numeric value (a Float with `precision` digits); `precision`; `error_estimate` — mpmath's estimate of the quadrature error.

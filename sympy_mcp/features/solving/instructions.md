@@ -25,6 +25,7 @@ Solve a single equation or expression for one variable.
 - `expr_key` (str): Session key of the stored expression or equation (the `key` returned by a previous call).
 - `var_name` (str): Name of the variable to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the solution set (a SymPy set such as `"{-1, 1}"`, or `ImageSet`/`ConditionSet` for non-finite solutions); `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.
@@ -53,6 +54,7 @@ Solve a system of linear equations.
 - `expr_keys` (list of str): List of session keys for the equations/expressions to solve (each the `key` returned by a previous call).
 - `var_names` (list of str): List of variable names to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the solution set of tuples, in the order of `var_names` (e.g. `"{(1, 2)}"`); `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.
@@ -81,6 +83,7 @@ Solve a system of nonlinear equations symbolically.
 - `expr_keys` (list of str): List of session keys for the equations/expressions to solve.
 - `var_names` (list of str): List of variable names to solve for.
 - `domain` (str, optional): Solution domain — `"complex"` (default), `"real"`, `"integer"`, `"natural"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the solution set of tuples, in the order of `var_names`; `key` — session key the set is stored under; `latex` — the set in LaTeX. With `output_format="legacy"`: the LaTeX string only.

@@ -26,6 +26,7 @@ Parse and store a mathematical expression string.
 - `expression` (str): Expression string using SymPy syntax (e.g., `"x**2 + 2*x + 1"`, `"sin(x)*cos(y)"`)
 - `canonicalize` (bool): If True, simplify/expand the expression. Default: `true`
 - `name` (str, optional): Custom key name (default: auto-generated `"expr_N"`)
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the expression as a string; `key` — session key (e.g. `"expr_0"`) to pass as `expr_key` in subsequent calls; `latex` — the result in LaTeX.
@@ -53,6 +54,7 @@ Parse and store an equation lhs = rhs.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `lhs_expression` (str): Left-hand side expression string
 - `rhs_expression` (str): Right-hand side expression string
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the equation as a string (e.g. `"Eq(x**2, 1)"`); `key` — session key for use in solve tools; `latex` — the result in LaTeX.
@@ -107,6 +109,7 @@ Substitute a variable with another stored expression, or with an expression stri
 - `expr_key` (str): Session key of the expression to substitute into
 - `var_name` (str): Name of the variable to replace
 - `replacement_expr_key` (str): Session key of the expression to substitute in (the `key` returned by a previous call), or an expression string such as `"3"` or `"@expr_1 + 1"`. A bare name that is neither a stored key nor an introduced symbol is reported as not found.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the substituted expression as a string; `key` — session key for the new expression; `latex` — the result in LaTeX.
@@ -135,6 +138,7 @@ Factor an expression into irreducible components over the rationals.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to factor.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the factored expression (e.g. `"(x - 1)*(x + 1)"`); `key` — session key for the factored form; `latex` — the result in LaTeX.
@@ -163,6 +167,7 @@ Expand a product or power into a sum of terms.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to expand.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the expanded expression (e.g. `"x**2 + 2*x + 1"`); `key` — session key; `latex` — the result in LaTeX.
@@ -191,6 +196,7 @@ Collect and group terms by powers of a variable.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to collect.
 - `var_name` (str): Variable name to collect by.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the collected expression (e.g. `"x*(y + z + x)"`); `key` — session key; `latex` — the result in LaTeX.
@@ -219,6 +225,7 @@ Decompose a rational expression into partial fractions.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the rational expression.
 - `var_name` (str): Variable to decompose with respect to.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — partial fraction decomposition; `key` — session key; `latex` — the result in LaTeX.
@@ -250,6 +257,7 @@ Numerically evaluate an expression to a specified number of significant digits.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to evaluate.
 - `n` (int, optional): Number of significant digits. Default: `15`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — numerical value as a string (e.g. `"3.14159265358979"`); `key` — session key for the numerical result (can be chained further); `latex` — the result in LaTeX.
@@ -276,6 +284,7 @@ Rewrite an expression in terms of another function, e.g. trigonometric and hyper
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression.
 - `target` (str): Name of a SymPy function to rewrite in terms of, e.g. `"exp"`, `"cos"`, `"sin"`, `"tan"`, `"log"`, `"sqrt"`, `"gamma"`, `"factorial"`, `"Piecewise"`, `"Heaviside"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of the rewritten expression. If no rewrite rule applied, a `note` says the expression is unchanged.
@@ -301,6 +310,7 @@ Expand logarithms: `log(x*y)` → `log(x) + log(y)`, `log(x**n)` → `n*log(x)`.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression.
 - `force` (bool, optional): Expand even when the symbols' assumptions don't guarantee it is valid. Default: `false`, which only expands what holds for the declared assumptions (e.g. positive symbols). `force=true` ignores branch cuts, so the result may be wrong for negative or complex values.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex`; a `note` if nothing could be expanded.
@@ -325,6 +335,7 @@ Simplify using trigonometric (and hyperbolic) identities.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex`; a `note` if the expression is unchanged.
@@ -350,6 +361,7 @@ Combine powers with the same base or exponent: `x**a * x**b` → `x**(a + b)`.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression.
 - `force` (bool, optional): Combine even when assumptions don't guarantee it (e.g. `sqrt(x)*sqrt(y)` → `sqrt(x*y)` for complex `x`, `y`). Default: `false`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex`; a `note` if the expression is unchanged.
@@ -378,6 +390,7 @@ Find a simple exact expression that matches a floating-point number, e.g. `0.333
 - `constants` (list of str, optional): Constants the closed form may contain, e.g. `["pi", "E"]`.
 - `tolerance` (float, optional): Maximum allowed difference. Default: based on the number's precision.
 - `rational` (bool, optional): Only look for a rational number. Default: `false`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of the exact expression found (or the input, if none).
@@ -404,6 +417,7 @@ Substitute several symbols at once, with numbers or expressions, without storing
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression.
 - `substitutions` (dict[str, str]): Map from what to replace (a symbol name, or an expression such as `"f(x)"`) to its replacement (an expression string, which may use `@key` references). Example: `{"x": "3", "y": "1/2", "m": "@expr_4"}`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key`, `result`, `latex` of the substituted expression.

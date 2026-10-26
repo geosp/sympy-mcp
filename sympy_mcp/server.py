@@ -4,6 +4,7 @@ SymPy MCP Server - extends BaseMCPServer from mcp-service-kit.
 
 from mcp_service_kit import BaseMCPServer, create_main_with_modes
 
+from sympy_mcp import timeouts
 from sympy_mcp.config import AppConfig
 from sympy_mcp.service import SymPyMCPService
 from sympy_mcp.session import SymPySessionManager
@@ -31,6 +32,7 @@ class SymPyMCPServer(BaseMCPServer):
 
 def create_service(config: AppConfig) -> SymPyMCPService:
     """Build the MCP service with a session manager configured from the app config."""
+    timeouts.configure(config.sympy.timeout_seconds)
     session_manager = SymPySessionManager(ttl_seconds=config.sympy.session_ttl_seconds)
     return SymPyMCPService(session_manager)
 

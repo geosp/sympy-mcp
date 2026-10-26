@@ -25,6 +25,7 @@ Creates a symbolic matrix from a 2D list of expression strings.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_data` (list of list of str): 2D list where each string is parsed as a SymPy expression. All rows must have the same length.
 - `name` (str, optional): Custom key name (default: auto-generated `"matrix_N"`).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the matrix as a string (e.g. `"Matrix([[1, 2], [3, 4]])"`); `key` — session key for chaining (e.g. `"matrix_0"`); `latex` — the result in LaTeX.
@@ -57,6 +58,7 @@ Calculates the determinant of a square matrix.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix (the `key` returned by `create_matrix`).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the determinant as a string (e.g. `"-2"`); `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -84,6 +86,7 @@ Calculates the inverse of a square matrix. Fails if the matrix is singular.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the inverse matrix as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -111,6 +114,7 @@ Calculates the eigenvalues of a square matrix with their algebraic multiplicitie
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — eigenvalue dictionary as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -137,6 +141,7 @@ Calculates the eigenvectors of a square matrix.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of an existing matrix.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — list of `(eigenvalue, multiplicity, [eigenvectors])` tuples as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -163,6 +168,7 @@ Multiply two stored matrices: `A·B`.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `a_key` (str): Session key of the left matrix `A`.
 - `b_key` (str): Session key of the right matrix `B`. Its row count must equal the column count of `A`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the product.
@@ -189,6 +195,7 @@ Raise a square matrix to a power. The exponent may be symbolic, e.g. an integer 
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
 - `exponent` (str): The power as an expression string, e.g. `"3"`, `"-1"`, `"n"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the power.
@@ -214,6 +221,7 @@ Matrix exponential `exp(A)` of a square matrix.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of `exp(A)`.
@@ -238,6 +246,7 @@ Trace (sum of the diagonal) of a square matrix.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the trace.
@@ -262,6 +271,7 @@ Transpose of a matrix, `Aᵀ`.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the transpose.
@@ -288,6 +298,7 @@ Hermitian adjoint (conjugate transpose) `A†` of a matrix. This is **not** the 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of `A†`.
@@ -314,6 +325,7 @@ Commutator `[A, B] = A·B - B·A` of two square matrices of the same size.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `a_key` (str): Session key of `A`.
 - `b_key` (str): Session key of `B`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"matrix_N"`), `result`, `latex` of the commutator.
@@ -339,6 +351,7 @@ Rank of a matrix (the number of linearly independent rows or columns).
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the rank.
@@ -364,6 +377,7 @@ Basis of the nullspace (kernel) of a matrix: the vectors `v` with `A·v = 0`.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `matrix_key` (str): Session key of a stored matrix (from `create_matrix` or another matrix tool).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` of the list of basis column vectors; `dimension` — how many there are.

@@ -10,9 +10,11 @@ plain string each tool returned before the payload existed.
 """
 
 import json
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Optional
 
 import sympy
+
+from sympy_mcp import timeouts
 
 OUTPUT_FORMATS = ("structured", "legacy")
 
@@ -56,3 +58,10 @@ def format_output(raw: str, output_format: str = "structured") -> str:
     if isinstance(raw, StoredResult):
         return json.dumps(payload(raw))
     return json.dumps({"error": str(raw)})
+
+
+def run_tool(
+    call: Callable[[], str], output_format: str = "structured", timeout_seconds: Optional[float] = None
+) -> str:
+    """Run a computing method under the time limit and format its return value."""
+    return format_output(timeouts.run_limited(call, timeout_seconds), output_format)

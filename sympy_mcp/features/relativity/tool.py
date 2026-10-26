@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Union
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
-from sympy_mcp.results import format_output
+from sympy_mcp.results import format_output, run_tool
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
     async def create_predefined_metric(
         session_id: str,
         metric_name: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Create a predefined spacetime metric."""
@@ -23,7 +24,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.create_predefined_metric(metric_name), output_format)
+        return run_tool(lambda: state.create_predefined_metric(metric_name), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "search_predefined_metrics"))
@@ -45,6 +46,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         metric_key: str,
         tensor_type: str,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Calculate a curvature tensor from a stored metric."""
@@ -52,7 +54,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.calculate_tensor(metric_key, tensor_type, simplify_result=simplify), output_format)
+        return run_tool(lambda: state.calculate_tensor(metric_key, tensor_type, simplify_result=simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "create_custom_metric"))
@@ -61,6 +63,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         components: List[List[str]],
         coord_symbols: List[str],
         config: str = "ll",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Create a custom metric tensor from a 2D array of SymPy expression strings."""
@@ -68,7 +71,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.create_custom_metric(components, coord_symbols, config), output_format)
+        return run_tool(lambda: state.create_custom_metric(components, coord_symbols, config), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "print_latex_tensor"))
@@ -90,6 +93,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         metric_key: str,
         components: Any,
         config: str,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Create a tensor from components in a stored metric's coordinates."""
@@ -97,7 +101,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.create_tensor(metric_key, components, config), output_format)
+        return run_tool(lambda: state.create_tensor(metric_key, components, config), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "covariant_derivative"))
@@ -106,6 +110,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         tensor_key: str,
         metric_key: Optional[str] = None,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Covariant derivative of a stored tensor; the derivative index is appended last."""
@@ -113,7 +118,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.covariant_derivative(tensor_key, metric_key, simplify), output_format)
+        return run_tool(lambda: state.covariant_derivative(tensor_key, metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "tensor_divergence"))
@@ -123,6 +128,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         index: int = 0,
         metric_key: Optional[str] = None,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Divergence of a stored tensor on one index, e.g. nabla^a G_ab."""
@@ -130,7 +136,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.tensor_divergence(tensor_key, index, metric_key, simplify), output_format)
+        return run_tool(lambda: state.tensor_divergence(tensor_key, index, metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "contract_indices"))
@@ -141,6 +147,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         index_b: int,
         metric_key: Optional[str] = None,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Contract two indices of a stored tensor."""
@@ -148,7 +155,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.contract_indices(tensor_key, index_a, index_b, metric_key, simplify), output_format)
+        return run_tool(lambda: state.contract_indices(tensor_key, index_a, index_b, metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "raise_index"))
@@ -158,6 +165,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         index: int,
         metric_key: Optional[str] = None,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Raise one index of a stored tensor with the metric."""
@@ -165,7 +173,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.raise_index(tensor_key, index, metric_key, simplify), output_format)
+        return run_tool(lambda: state.raise_index(tensor_key, index, metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "lower_index"))
@@ -175,6 +183,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         index: int,
         metric_key: Optional[str] = None,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Lower one index of a stored tensor with the metric."""
@@ -182,7 +191,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.lower_index(tensor_key, index, metric_key, simplify), output_format)
+        return run_tool(lambda: state.lower_index(tensor_key, index, metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "tensor_component"))
@@ -191,6 +200,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         tensor_key: str,
         indices: List[Union[int, str]],
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Store one component of a tensor as an expression."""
@@ -198,7 +208,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.tensor_component(tensor_key, indices, simplify), output_format)
+        return run_tool(lambda: state.tensor_component(tensor_key, indices, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "kretschmann_scalar"))
@@ -206,6 +216,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         session_id: str,
         metric_key: str,
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Kretschmann scalar R_abcd R^abcd of a stored metric."""
@@ -213,7 +224,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.kretschmann_scalar(metric_key, simplify), output_format)
+        return run_tool(lambda: state.kretschmann_scalar(metric_key, simplify), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "killing_equation"))
@@ -223,6 +234,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         vector: List[str],
         vector_config: str = "u",
         simplify: bool = True,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Killing's equation nabla_(a xi_b) for a vector field on a stored metric."""
@@ -230,4 +242,4 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.killing_equation(metric_key, vector, vector_config, simplify), output_format)
+        return run_tool(lambda: state.killing_equation(metric_key, vector, vector_config, simplify), output_format, timeout_seconds)

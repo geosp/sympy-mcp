@@ -49,6 +49,7 @@ Put an operator expression in normal order: all creation operators `a†` to the
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the operator expression.
 - `mode` (str, optional): `"symbol"` (default) or `"commute"`, as above.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key`, `result`, `latex` of the normal-ordered expression.
@@ -75,6 +76,7 @@ Evaluate the commutator `[A, B] = AB - BA` of two operator expressions, simplifi
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_a` (str): A stored key or an expression string, e.g. `"a"`.
 - `expr_b` (str): A stored key or an expression string, e.g. `"Dagger(a)**2"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key`, `result`, `latex` of the evaluated commutator.
@@ -99,6 +101,7 @@ Apply the operators in an expression to the kets and bras next to them (SymPy's 
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of an expression containing operators and states.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key`, `result`, `latex` of the expression after applying operators.
@@ -126,6 +129,7 @@ Expectation value `⟨α| X |α⟩` of an operator expression in a coherent stat
 - `expr_key` (str): Session key of the operator expression `X`.
 - `operator_name` (str): The annihilation operator of the mode, e.g. `"a"` (from `introduce_boson_operator`).
 - `alpha` (str): The coherent-state eigenvalue, e.g. `"alpha"` (an introduced symbol, complex by default).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"` (the key only).
 
 **Returns:** JSON — `key`, `result`, `latex` of the expectation value; `normal_ordered` — the normal-ordered form of `X` that was evaluated.

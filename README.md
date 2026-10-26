@@ -49,7 +49,9 @@ uv run sympy-mcp --mode stdio
 uv run sympy-mcp --mode http --port 8081
 ```
 
-Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`). Settings can also come from environment variables or a `.env` file: `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), and `SYMPY_SESSION_TTL` (session lifetime in seconds, default `1800`).
+Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`). Settings can also come from environment variables or a `.env` file: `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), `SYMPY_SESSION_TTL` (session lifetime in seconds, default `1800`), and `SYMPY_TIMEOUT` (time limit per computation in seconds, default `30`, `0` for none).
+
+Integration, simplification and ODE solving can run for a very long time on some inputs. Each computing tool therefore runs under a time limit and returns a timeout error instead of blocking the server; a call can override the limit with `timeout_seconds`. The limit uses `SIGALRM`, so it is enforced on Linux and macOS but not on Windows.
 
 ## Available Tools
 

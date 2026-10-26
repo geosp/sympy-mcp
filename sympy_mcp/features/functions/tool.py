@@ -4,8 +4,9 @@ from typing import Dict, List, Optional
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
-from sympy_mcp.results import format_output
+from sympy_mcp.results import format_output, run_tool
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
+from sympy_mcp.timeouts import run_limited
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         func_name: str,
         hint: str = "default",
         ics: Optional[Dict[str, str]] = None,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve an ordinary differential equation (ODE)."""
@@ -39,7 +41,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.dsolve_ode(expr_key, func_name, hint, ics), output_format)
+        return run_tool(lambda: state.dsolve_ode(expr_key, func_name, hint, ics), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "dsolve_system"))
@@ -48,6 +50,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_keys: List[str],
         func_names: List[str],
         ics: Optional[Dict[str, str]] = None,
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve a coupled system of ordinary differential equations."""
@@ -55,7 +58,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.dsolve_system(expr_keys, func_names, ics), output_format)
+        return run_tool(lambda: state.dsolve_system(expr_keys, func_names, ics), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "verify_ode_solution"))
@@ -65,13 +68,16 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: Optional[str] = None,
         expr_keys: Optional[List[str]] = None,
         func_name: Optional[str] = None,
+        timeout_seconds: Optional[float] = None,
     ) -> str:
         """Check that a solution satisfies an ODE or ODE system (checkodesol)."""
         try:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return str(e)
-        return state.verify_ode_solution(solution_key, expr_key, expr_keys, func_name)
+        return run_limited(
+            lambda: state.verify_ode_solution(solution_key, expr_key, expr_keys, func_name), timeout_seconds
+        )
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "pdsolve_pde"))
@@ -80,6 +86,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         func_name: str,
         hint: str = "default",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve a partial differential equation (PDE)."""
@@ -87,4 +94,4 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.pdsolve_pde(expr_key, func_name, hint), output_format)
+        return run_tool(lambda: state.pdsolve_pde(expr_key, func_name, hint), output_format, timeout_seconds)

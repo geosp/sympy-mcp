@@ -24,6 +24,7 @@ Load a standard spacetime metric by name. The metric is stored in the session un
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_name` (str): One of the predefined metric enum values (see table below).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — string representation of the metric; `key` — session key (e.g. `"metric_Schwarzschild"`) for use in `calculate_tensor`; `latex` — the result in LaTeX.
@@ -94,6 +95,7 @@ Compute a curvature tensor from a stored metric.
 - `metric_key` (str): Session key of a stored metric (the `key` returned by `create_predefined_metric` or `create_custom_metric`).
 - `tensor_type` (str): One of the tensor type enum values (see table below).
 - `simplify` (bool, optional): Whether to apply `sympy.simplify` to every component of the result (or to the scalar, for `RicciScalar`). Default: `true`. Set to `false` for large metrics such as Kerr or Kerr–Newman, where simplifying every component can take a long time.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — string representation of the tensor; `key` — session key (e.g. `"ricciscalar_metric_Schwarzschild"`) for use in `print_latex_tensor`; `latex` — the result in LaTeX.
@@ -136,6 +138,7 @@ Define a metric from an explicit component array.
 - `components` (list of list of str): 2D list of SymPy expression strings (e.g. `[["1", "0"], ["0", "r**2"]]`). Use `"0"` for zero components. Components can use any symbol introduced with `intro`/`intro_many` (with its assumptions) and any function introduced with `introduce_function`, e.g. `"-exp(2*a(t, r))"`.
 - `coord_symbols` (list of str): Coordinate variable names (e.g. `["r", "theta"]`). If a name matches a symbol already introduced in the session, that symbol (and its assumptions) is used as the coordinate.
 - `config` (str, optional): Index configuration — `"ll"` for covariant (default) or `"uu"` for contravariant.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — string representation of the metric; `key` — session key (e.g. `"metric_custom_0"`) for use in `calculate_tensor`; `latex` — the result in LaTeX.
@@ -184,6 +187,7 @@ Create a tensor from explicit components in the coordinates of a stored metric, 
 - `metric_key` (str): The metric whose coordinates (and index raising/lowering) the tensor uses.
 - `components` (nested list of str): One level of nesting per index, each with one entry per coordinate. A vector is `["r", "0"]`, a rank-2 tensor `[["1", "0"], ["0", "r**2"]]`. Entries may use the metric's coordinates, session symbols and functions, and `@key` references.
 - `config` (str): Index positions, one letter per index: `"u"` (contravariant) or `"l"` (covariant), e.g. `"u"`, `"ll"`, `"ul"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the key only.
 
 **Returns:** JSON — `key` (e.g. `"tensor_5"`), `result` / `latex` — the components; `config` — the index configuration.
@@ -213,6 +217,7 @@ Covariant derivative of a stored tensor or metric. The derivative index is appen
 - `tensor_key` (str): A stored tensor (from `calculate_tensor`, `create_tensor` or another tensor tool) or a metric key.
 - `metric_key` (str, optional): The metric to use. Default: the tensor's own metric.
 - `simplify` (bool, optional): Simplify every component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (e.g. `"tensor_6"`), `result` / `latex` — the components; `config` — the new index configuration.
@@ -242,6 +247,7 @@ Divergence of a stored tensor on one index: `∇_a T^{...a...}`. If that index i
 - `index` (int, optional): Position (0-based) of the index to contract with the derivative. Default: `0`.
 - `metric_key` (str, optional): The metric to use. Default: the tensor's own metric.
 - `simplify` (bool, optional): Simplify every component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — for a rank ≥ 2 tensor, `key` (e.g. `"tensor_7"`), the remaining components and `config`; for a vector, the scalar divergence stored as an expression (`"expr_N"`).
@@ -271,6 +277,7 @@ Contract two indices of a stored tensor. If both are upper (or both lower), one 
 - `index_b` (int): Position (0-based) of the second index.
 - `metric_key` (str, optional): The metric to use. Default: the tensor's own metric.
 - `simplify` (bool, optional): Simplify the result. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — the contracted tensor (`"tensor_N"` with `config`), or, if no indices remain, a scalar stored as `"expr_N"`.
@@ -298,6 +305,7 @@ Raise one index of a stored tensor with the inverse metric (`T^a = g^{ab} T_b`).
 - `index` (int): Position (0-based) of the index to raise. It must currently be lower.
 - `metric_key` (str, optional): The metric to use. Default: the tensor's own metric.
 - `simplify` (bool, optional): Simplify every component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (`"tensor_N"`), the components and the new `config`.
@@ -325,6 +333,7 @@ Lower one index of a stored tensor with the metric (`T_a = g_{ab} T^b`).
 - `index` (int): Position (0-based) of the index to lower. It must currently be upper.
 - `metric_key` (str, optional): The metric to use. Default: the tensor's own metric.
 - `simplify` (bool, optional): Simplify every component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (`"tensor_N"`), the components and the new `config`.
@@ -352,6 +361,7 @@ Store one component of a tensor or metric as an expression, so it can be simplif
 - `tensor_key` (str): A stored tensor or metric key.
 - `indices` (list of int or str): One entry per index, either a 0-based position or a coordinate name, e.g. `[0, 0]` or `["v", "v"]`.
 - `simplify` (bool, optional): Simplify the component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` — the component.
@@ -377,6 +387,7 @@ Compute the Kretschmann scalar `R_abcd R^abcd` of a stored metric.
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `metric_key` (str): A stored metric.
 - `simplify` (bool, optional): Simplify the result. Default: `true`. Large metrics (e.g. Kerr) can take a long time to simplify.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (`"expr_N"`), `result`, `latex` — the scalar.
@@ -405,6 +416,7 @@ Evaluate Killing's equation `∇_(a ξ_b) = (∇_a ξ_b + ∇_b ξ_a) / 2` for a
 - `vector` (list of str): One component per coordinate, in the metric's coordinate order, e.g. `["-U", "V", "0", "0"]` for `V ∂_V - U ∂_U` in coordinates `(U, V, y, z)`.
 - `vector_config` (str, optional): `"u"` if the components are `ξ^a` (default), `"l"` if they are `ξ_a`.
 - `simplify` (bool, optional): Simplify every component. Default: `true`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) or `"legacy"`.
 
 **Returns:** JSON — `key` (`"tensor_N"`), the symmetric tensor `∇_(a ξ_b)` (`config` `"ll"`), and `satisfied`: `true` if every component is zero, `false` if not, or `null` when `simplify=false` left components that might still be zero.

@@ -1,10 +1,10 @@
 """MCP tools for solving equations."""
 import logging
-from typing import List
+from typing import List, Optional
 from fastmcp import FastMCP
 from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
-from sympy_mcp.results import format_output
+from sympy_mcp.results import format_output, run_tool
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 from sympy_mcp.shared.enums import Domain
 
@@ -19,6 +19,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_key: str,
         var_name: str,
         domain: str = "complex",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve a stored expression/equation algebraically for a given variable."""
@@ -26,7 +27,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.solve_algebraically(expr_key, var_name, domain), output_format)
+        return run_tool(lambda: state.solve_algebraically(expr_key, var_name, domain), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "solve_linear_system"))
@@ -35,6 +36,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_keys: List[str],
         var_names: List[str],
         domain: str = "complex",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve a linear system of equations."""
@@ -42,7 +44,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.solve_linear_system(expr_keys, var_names, domain), output_format)
+        return run_tool(lambda: state.solve_linear_system(expr_keys, var_names, domain), output_format, timeout_seconds)
 
     @mcp.tool()
     @inject_docstring(lambda: load_tool_instruction("instructions.md", __file__, "solve_nonlinear_system"))
@@ -51,6 +53,7 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
         expr_keys: List[str],
         var_names: List[str],
         domain: str = "complex",
+        timeout_seconds: Optional[float] = None,
         output_format: str = "structured",
     ) -> str:
         """Solve a nonlinear system of equations."""
@@ -58,4 +61,4 @@ def register_tool(mcp: FastMCP, session_manager: SymPySessionManager) -> None:
             state = session_manager.get_sync(session_id)
         except SessionNotFoundError as e:
             return format_output(str(e), output_format)
-        return format_output(state.solve_nonlinear_system(expr_keys, var_names, domain), output_format)
+        return run_tool(lambda: state.solve_nonlinear_system(expr_keys, var_names, domain), output_format, timeout_seconds)

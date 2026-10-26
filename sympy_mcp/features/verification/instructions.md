@@ -27,6 +27,7 @@ Sample points are exact random values chosen to satisfy each symbol's assumption
 - `expr_a` (str): A stored key or an expression string. Matrices are compared element by element.
 - `expr_b` (str): A stored key or an expression string.
 - `numeric_samples` (int, optional): Number of non-singular sample points to check when no symbolic proof is found. Default: `20`. `0` skips the numeric stage.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 
 **Returns:** JSON with a `verdict`:
 - `proved_equal` — with `method`, the transformation that reduced the difference to 0. If that was `expand_log(force=True)`, a `caveat` is included as well.

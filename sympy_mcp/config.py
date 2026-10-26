@@ -9,13 +9,19 @@ from mcp_service_kit import BaseServerConfig
 
 
 class SymPyConfig(BaseSettings):
-    """SymPy-specific configuration. Environment variables: SYMPY_SESSION_TTL."""
+    """SymPy-specific configuration. Environment variables: SYMPY_SESSION_TTL, SYMPY_TIMEOUT."""
     model_config = SettingsConfigDict(extra="ignore")
 
     session_ttl_seconds: int = Field(
         default=1800,
         validation_alias="SYMPY_SESSION_TTL",
         description="Session TTL in seconds (default: 30 minutes)"
+    )
+    timeout_seconds: float = Field(
+        default=30.0,
+        ge=0,
+        validation_alias="SYMPY_TIMEOUT",
+        description="Default time limit per computation in seconds (0: no limit)"
     )
 
 

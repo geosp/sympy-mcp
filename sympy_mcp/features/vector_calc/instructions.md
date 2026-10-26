@@ -54,6 +54,7 @@ Creates a vector field in a previously created coordinate system.
 - `comp_x` (str): Expression string for the x-component.
 - `comp_y` (str): Expression string for the y-component.
 - `comp_z` (str): Expression string for the z-component.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the vector field as a string; `key` — session key for chaining (e.g. `"vector_0"`); `latex` — the result in LaTeX.
@@ -84,6 +85,7 @@ Calculates the curl of a vector field.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `vector_field_key` (str): Session key of an existing vector field (the `key` returned by `create_vector_field`).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the curl as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -111,6 +113,7 @@ Calculates the divergence of a vector field, producing a scalar expression.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `vector_field_key` (str): Session key of an existing vector field.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the divergence as a string (scalar); `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -138,6 +141,7 @@ Calculates the gradient of a scalar field, producing a vector field.
 **Parameters:**
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `scalar_field_key` (str): Session key of an existing scalar expression (the `key` returned by a previous call).
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the gradient as a string (vector); `key` — session key for chaining; `latex` — the result in LaTeX.

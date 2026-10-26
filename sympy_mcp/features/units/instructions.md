@@ -29,6 +29,7 @@ Converts a physical quantity expression to specified target units.
 - `expr_key` (str): Session key of the expression to convert (the `key` returned by a previous call). The expression should be a physical quantity (e.g., a value times a unit).
 - `target_units` (list of str): Unit name strings to convert to (e.g., `["meter", "second"]`).
 - `unit_system` (str, optional): Unit system — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the converted expression as a string (e.g. `"1000*meter"`); `key` — session key for chaining; `latex` — the result in LaTeX.
@@ -60,6 +61,7 @@ Simplifies a physical quantity expression, combining and reducing units where po
 - `session_id` (str): Session identifier. Must be obtained by calling `create_session` first.
 - `expr_key` (str): Session key of the expression to simplify.
 - `unit_system` (str, optional): Unit system context — `"SI"` (default), `"MKS"`, `"MKSA"`, `"natural"`, `"cgs"`.
+- `timeout_seconds` (float, optional): Time limit for this call in seconds. Default: the server's limit (`SYMPY_TIMEOUT`, 30 s unless configured); `0` means no limit. A call that runs out of time returns a timeout error and changes nothing else.
 - `output_format` (str, optional): `"structured"` (default) for the JSON payload, or `"legacy"` for the old plain-string return value.
 
 **Returns:** JSON — `result` — the simplified expression as a string; `key` — session key for chaining; `latex` — the result in LaTeX.
