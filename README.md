@@ -39,18 +39,17 @@ cd sympy-mcp
 uv sync
 ```
 
-The server has three run modes:
+The server is built on [mcp-service-kit](https://github.com/geosp/mcp-service-kit) and has two run modes:
 
 ```shell
 # stdio transport — for Claude Desktop, Cursor, and other subprocess-based clients
 uv run sympy-mcp --mode stdio
 
 # MCP HTTP server — streamable-HTTP transport, listens on :8081/mcp
-uv run sympy-mcp --mode mcp --port 8081
-
-# REST API — direct HTTP access for testing and custom integrations
-uv run sympy-mcp --mode rest --port 8081
+uv run sympy-mcp --mode http --port 8081
 ```
+
+Run `uv run sympy-mcp --help` for all options (`--host`, `--port`, `--log-level`). Settings can also come from environment variables or a `.env` file: `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), and `SYMPY_SESSION_TTL` (session lifetime in seconds, default `1800`).
 
 ## Available Tools
 
@@ -200,7 +199,7 @@ OR manually add to your `settings.json` (global):
 To use with [Cline](https://cline.bot/), first start the MCP HTTP server:
 
 ```shell
-uv run sympy-mcp --mode mcp --port 8081 --no-auth
+uv run sympy-mcp --mode http --port 8081
 ```
 
 Then open Cline, select "MCP Servers" → "Remote Servers" and add:
@@ -228,13 +227,12 @@ This is the recommended transport when running the server as a standalone proces
 
 ```bash
 # Run MCP HTTP server locally
-uv run sympy-mcp --mode mcp --port 8081 --no-auth
-
-# Run REST API locally (useful for debugging and custom integrations)
-uv run sympy-mcp --mode rest --port 8081 --no-auth
+uv run sympy-mcp --mode http --port 8081
 ```
 
-A `/health` endpoint is exposed in both modes, returning:
+The server has no built-in authentication. Put it behind a gateway if it needs to be reachable beyond localhost.
+
+A `/health` endpoint is exposed in HTTP mode, returning:
 
 ```json
 {"status": "ok", "service": "sympy", "active_sessions": 0}
@@ -248,30 +246,24 @@ You can build and run the server using Docker locally:
 # Build the Docker image
 docker build -t sympy-mcp .
 
-# Run as MCP HTTP server (port 8081, /mcp endpoint)
-docker run -p 8081:8081 sympy-mcp uv run sympy-mcp --mode mcp --host 0.0.0.0 --port 8081 --no-auth
-
-# Run as REST API (port 8081)
-docker run -p 8081:8081 sympy-mcp uv run sympy-mcp --mode rest --host 0.0.0.0 --port 8081 --no-auth
+# Run as MCP HTTP server (port 8081, /mcp endpoint) — the image's default command
+docker run -p 8081:8081 sympy-mcp
 ```
 
-Or use Docker Compose from the `docker/` directory, which starts both services simultaneously:
+Or use Docker Compose from the `docker/` directory:
 
 ```bash
 cd docker
 docker compose up -d --build
 ```
 
-This starts:
-- `sympy-mcp-rest` — REST API on **port 8081**
-- `sympy-mcp-mcp` — MCP HTTP server on **port 8082** (`/mcp` endpoint)
+This starts `sympy-mcp`, the MCP HTTP server, on **port 8082** (`/mcp` endpoint).
 
 Alternatively, pull the pre-built image from GitHub Container Registry:
 
 ```bash
 docker pull ghcr.io/sdiehl/sympy-mcp:main
-docker run -p 8081:8081 --rm ghcr.io/sdiehl/sympy-mcp:main \
-  uv run sympy-mcp --mode mcp --host 0.0.0.0 --port 8081 --no-auth
+docker run -p 8081:8081 --rm ghcr.io/sdiehl/sympy-mcp:main
 ```
 
 To configure Claude Desktop to launch the Docker container directly:

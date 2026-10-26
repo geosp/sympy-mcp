@@ -2,9 +2,9 @@
 
 ## Overview
 
-`sympy-mcp` is built on a dual-transport architecture: the same symbolic math engine is exposed either as an MCP server (for AI clients) or as a REST API (for HTTP clients), both running from the same codebase.
+`sympy-mcp` exposes a symbolic math engine to AI clients over the Model Context Protocol. The server framework comes from [mcp-service-kit](https://github.com/geosp/mcp-service-kit): it provides the stdio and streamable-HTTP transports, the standard CLI, and environment-based configuration.
 
-The entrypoint is the `sympy-mcp` CLI (`sympy_mcp/server.py:main`), which selects a transport mode at startup. All symbolic computation happens in `SymPyState` (one instance per session), managed by `SymPySessionManager`.
+The entrypoint is the `sympy-mcp` CLI (`sympy_mcp/server.py:main`, built with `create_main_with_modes`), which selects a transport at startup. All symbolic computation happens in `SymPyState` (one instance per session), managed by `SymPySessionManager`.
 
 ---
 
@@ -12,15 +12,13 @@ The entrypoint is the `sympy-mcp` CLI (`sympy_mcp/server.py:main`), which select
 
 ```mermaid
 flowchart TD
-    CLI["sympy-mcp CLI\n--mode stdio|mcp|rest"]
+    CLI["sympy-mcp CLI\n--mode stdio|http"]
 
-    CLI -->|"stdio"| STDIO["BaseMCPServer\nrun_stdio_transport()\nFastMCP over stdin/stdout"]
-    CLI -->|"mcp"| MCP["BaseMCPServer\nrun_mcp_only()\nFastMCP http_app()\n:8081/mcp"]
-    CLI -->|"rest"| REST["BaseMCPServer\ncreate_fastapi_app()\nFastAPI + FastMCP mounted\n:8081"]
+    CLI -->|"stdio"| STDIO["SymPyMCPServer (BaseMCPServer)\nFastMCP over stdin/stdout"]
+    CLI -->|"http"| HTTP["SymPyMCPServer (BaseMCPServer)\nFastMCP streamable HTTP\n:8081/mcp"]
 
     STDIO --> SM["SymPySessionManager"]
-    MCP --> SM
-    REST --> SM
+    HTTP --> SM
 
     SM --> STATE["SymPyState\n(one per session_id)"]
 ```
@@ -28,63 +26,62 @@ flowchart TD
 | Mode | Transport | Endpoint | Use case |
 |------|-----------|----------|----------|
 | `stdio` | stdin/stdout | — | Claude Desktop, Cursor, subprocess clients |
-| `mcp` | HTTP | `:8081/mcp` | Cline, HTTP-capable MCP clients, Docker |
-| `rest` | HTTP | `:8081/*` | Direct API access, debugging, custom integrations |
+| `http` | HTTP | `:8081/mcp` | Cline, HTTP-capable MCP clients, Docker |
 
-In `stdio` and `mcp` modes (`MCP_ONLY=true`), `BaseMCPServer.run_mcp_only()` runs FastMCP's Starlette app directly — the FastAPI router is **not** mounted. A `/health` custom route is registered on the FastMCP instance via `@mcp.custom_route()` so health checks work in all modes.
+A `/health` custom route is registered on the FastMCP instance via `@mcp.custom_route()` (in `sympy_mcp/service.py`), so HTTP deployments can be health-checked.
 
-In `rest` mode, FastAPI wraps a full router (feature routes + `/health` + session management endpoints).
+### Configuration
+
+`sympy_mcp/config.py` defines `AppConfig`, a pydantic-settings model with two sections. The kit's `main()` loads `.env` first, then applies CLI flags on top.
+
+| Section | Class | Environment variables |
+|---------|-------|-----------------------|
+| `server` | `SymPyServerConfig` (extends the kit's `BaseServerConfig`) | `MCP_TRANSPORT`, `MCP_HOST`, `MCP_PORT` (default `8081`), `MCP_AUTH_ENABLED` (default `false`) |
+| `sympy` | `SymPyConfig` | `SYMPY_SESSION_TTL` (default `1800`) |
+
+The server has no auth provider. Authentication is expected at the gateway in front of it.
 
 ---
 
 ## Feature Module Structure
 
-Each capability area is a Python package under `sympy_mcp/features/`. Every feature follows the same three-file convention:
+Each capability area is a Python package under `sympy_mcp/features/`. Every feature follows the same two-file convention:
 
 ```
 sympy_mcp/features/<feature>/
 ├── instructions.md # Tool descriptions loaded into MCP docstrings at runtime
-├── models.py       # Pydantic request/response models
-├── routes.py       # REST routes — create_router(session_manager) → APIRouter
 └── tool.py         # MCP tools — register_tool(mcp, session_manager)
 ```
 
-Both `routes.py` and `tool.py` are **auto-discovered** at startup — no manual registration needed when adding a new feature.
+`tool.py` is **auto-discovered** at startup by `SymPyMCPService.register_mcp_tools()` — no manual registration needed when adding a new feature.
 
 ```mermaid
 flowchart LR
-    subgraph Discovery ["Auto-discovery (startup)"]
-        SRV["SymPyMCPServer\ncreate_router()"]
-        SVC["SymPyMCPService\nregister_mcp_tools()"]
-    end
+    SVC["SymPyMCPService\nregister_mcp_tools()"]
 
     subgraph Features ["sympy_mcp/features/"]
         direction TB
-        CALC["calculus\ntool.py · routes.py"]
-        EXPR["expressions\ntool.py · routes.py"]
-        SESS["session\ntool.py · routes.py"]
-        SYMS["symbols\ntool.py · routes.py"]
-        SOLV["solving\ntool.py · routes.py"]
-        LA["linear_algebra\ntool.py · routes.py"]
-        FUNC["functions\ntool.py · routes.py"]
-        UNITS["units\ntool.py · routes.py"]
-        VCALC["vector_calc\ntool.py · routes.py"]
-        REL["relativity\ntool.py · routes.py"]
+        CALC["calculus"]
+        EXPR["expressions"]
+        SESS["session"]
+        SYMS["symbols"]
+        SOLV["solving"]
+        LA["linear_algebra"]
+        FUNC["functions"]
+        UNITS["units"]
+        VCALC["vector_calc"]
+        REL["relativity"]
     end
 
-    SRV -- "imports routes.py\ncreate_router()" --> Features
     SVC -- "imports tool.py\nregister_tool()" --> Features
 ```
 
 ### Adding a new feature
 
-1. Create `sympy_mcp/features/<name>/` with `instructions.md`, `models.py`, `routes.py`, `tool.py`
+1. Create `sympy_mcp/features/<name>/` with `__init__.py`, `instructions.md` and `tool.py`
 2. Write tool descriptions in `instructions.md` — these are injected as MCP docstrings at runtime
-3. Implement `create_router(session_manager) -> APIRouter` in `routes.py`
-4. Implement `register_tool(mcp, session_manager)` in `tool.py`
-5. Add the computation method to `SymPyState` in `sympy_mcp/state.py`
-
-Both `routes.py` and `tool.py` **must** be updated — they are independent registrations.
+3. Implement `register_tool(mcp, session_manager)` in `tool.py`
+4. Add the computation method to `SymPyState` in `sympy_mcp/state.py`
 
 ---
 
@@ -110,32 +107,11 @@ sequenceDiagram
     FastMCP-->>Client: CallToolResult
 ```
 
-### REST API call
-
-```mermaid
-sequenceDiagram
-    participant Client as HTTP Client
-    participant FastAPI
-    participant Route as routes.py
-    participant SM as SymPySessionManager
-    participant State as SymPyState
-
-    Client->>FastAPI: POST /expressions/factor {session_id, expr_key}
-    FastAPI->>Route: route handler(request: FactorRequest)
-    Route->>SM: get_sync(session_id)
-    SM-->>Route: SymPyState instance
-    Route->>State: state.factor_expression(expr_key)
-    State-->>Route: raw key (e.g. "expr_3")
-    Note over Route: resolve_result(raw) → human-readable string
-    Route-->>FastAPI: ExpressionResponse(result=..., result_key=...)
-    FastAPI-->>Client: JSON response
-```
-
 ---
 
 ## Session and State Model
 
-Each unique `session_id` maps to a `SessionEntry` (metadata + an isolated `SymPyState` instance). Sessions must be explicitly created via `create_session` (MCP) or `POST /sessions` (REST), which returns a server-generated UUID. Unknown session IDs are rejected with a `SessionNotFoundError`.
+Each unique `session_id` maps to a `SessionEntry` (metadata + an isolated `SymPyState` instance). Sessions must be explicitly created via the `create_session` tool, which returns a server-generated UUID. Unknown session IDs are rejected with a `SessionNotFoundError`.
 
 `get_sync()` updates `last_accessed` on every call, enabling future TTL-based eviction (configured via `ttl_seconds` at startup, default 1800 s).
 
@@ -186,26 +162,14 @@ The `series_expansion` tool is a special case: it stores the polynomial (without
 
 ---
 
-## Docker Compose Services
+## Docker Compose Service
 
 ```mermaid
 flowchart LR
-    subgraph Host
-        P1["Host :8081"]
-        P2["Host :8082"]
-    end
+    P["Host :8082"] --> MCP["sympy-mcp\n--mode http\nContainer :8081"]
 
-    subgraph Containers
-        REST["sympy-mcp-rest\n--mode rest\nContainer :8081"]
-        MCP["sympy-mcp-mcp\n--mode mcp\nContainer :8081"]
-    end
-
-    P1 --> REST
-    P2 --> MCP
-
-    REST -->|"GET /health"| H1["{'status':'ok'}"]
-    MCP -->|"GET /health"| H2["{'status':'ok'}"]
-    MCP -->|"POST /mcp"| H3["MCP protocol"]
+    MCP -->|"GET /health"| H1["{'status':'ok'}"]
+    MCP -->|"POST /mcp"| H2["MCP protocol"]
 ```
 
-Both containers are built from the same `Dockerfile`. Dependencies are pre-installed at build time via `uv sync --frozen --no-dev`, so startup is instant with no network access required.
+The container is built from the `Dockerfile`. Dependencies are pre-installed at build time via `uv sync --frozen --no-dev`, so startup is instant with no network access required.

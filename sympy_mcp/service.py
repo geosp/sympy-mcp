@@ -7,7 +7,7 @@ import importlib
 import pkgutil
 from pathlib import Path
 
-from core.server import BaseService
+from mcp_service_kit import BaseService
 from fastmcp import FastMCP
 
 from sympy_mcp.session import SymPySessionManager

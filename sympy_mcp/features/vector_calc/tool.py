@@ -2,7 +2,7 @@
 import logging
 from typing import Optional, List
 from fastmcp import FastMCP
-from core.utils import inject_docstring
+from mcp_service_kit.utils import inject_docstring
 from sympy_mcp.utils import load_tool_instruction
 from sympy_mcp.session import SymPySessionManager, SessionNotFoundError
 
