@@ -26,6 +26,7 @@ from sympy.physics.units import (
 )
 
 from sympy_mcp.parsing import parse_expression
+from sympy_mcp import verification
 from sympy_mcp.shared.enums import (
     Assumption, Domain, ODEHint, PDEHint, Metric, Tensor, UnitSystem,
 )
@@ -97,6 +98,18 @@ class SymPyState:
         """Parse an expression string with the session namespace and `@key` references."""
         namespace = {**self._parse_dict(), **(extra or {})}
         return parse_expression(text, namespace, self.expressions, evaluate=evaluate)
+
+    def _resolve_operand(self, text: str) -> Any:
+        """A stored key's value, or else the parsed expression string.
+
+        A bare name that is neither a stored key nor a known symbol or function
+        raises KeyError, so a mistyped key is not silently read as a new symbol.
+        """
+        if text in self.expressions:
+            return self.expressions[text]
+        if text.isidentifier() and text not in self._parse_dict():
+            raise KeyError(f"'{text}' is not a stored key or a known symbol.")
+        return self._parse(text)
 
     def _coerce_domain(self, domain) -> "Domain":
         """Accept either a Domain enum or a string value."""
@@ -415,6 +428,25 @@ class SymPyState:
             return key
         except Exception as e:
             return f"Error evaluating expression numerically: {e}"
+
+    # ------------------------------------------------------------------
+    # Verification
+    # ------------------------------------------------------------------
+
+    def check_equivalence(self, expr_a: str, expr_b: str, numeric_samples: int = 20) -> str:
+        """Return a JSON verdict on whether two expressions (keys or strings) are equal."""
+        import json
+        try:
+            a = self._resolve_operand(expr_a)
+            b = self._resolve_operand(expr_b)
+        except KeyError as e:
+            return f"Error: {e.args[0]}"
+        except Exception as e:
+            return f"Error parsing operands: {e}"
+        try:
+            return json.dumps(verification.check_equivalence(a, b, numeric_samples))
+        except Exception as e:
+            return f"Error checking equivalence: {e}"
 
     # ------------------------------------------------------------------
     # Algebraic solving

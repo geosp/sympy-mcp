@@ -69,6 +69,7 @@ The sympy-mcp server provides the following tools for symbolic mathematics:
 | Partial Fractions | `apart_expression` | Decomposes a rational expression into partial fractions |
 | Numeric Evaluator | `evalf_expression` | Numerically evaluates an expression to n significant digits |
 | Simplifier | `simplify_expression` | Simplifies a mathematical expression using SymPy's canonicalize function |
+| Equivalence Checker | `check_equivalence` | Decides whether two expressions are equal: symbolic proof first, then numeric spot checks that respect symbol assumptions; returns proved_equal, numerically_equal or not_equal (with a counterexample) |
 | Integration | `integrate_expression` | Integrates an expression with respect to a variable |
 | Differentiation | `differentiate_expression` | Differentiates an expression with respect to a variable |
 | Limit | `limit_expression` | Computes the limit of an expression as a variable approaches a point |
@@ -95,7 +96,7 @@ The sympy-mcp server provides the following tools for symbolic mathematics:
 | Gradient | `calculate_gradient` | Calculates the gradient of a scalar field |
 | Standard Metric | `create_predefined_metric` | Creates a predefined spacetime metric (e.g. Schwarzschild, Kerr, Minkowski) |
 | Metric Search | `search_predefined_metrics` | Searches available predefined metrics |
-| Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Ricci, Einstein, Weyl tensors) |
+| Tensor Calculator | `calculate_tensor` | Calculates tensors from a metric (Christoffel symbols, Riemann, Ricci, Schouten, Einstein, Weyl tensors) |
 | Custom Metric | `create_custom_metric` | Creates a custom metric tensor from provided components and symbols |
 | Tensor LaTeX | `print_latex_tensor` | Prints a stored tensor expression in LaTeX format |
 | Session Creator | `create_session` | Creates a new isolated session and returns a unique session_id |
